@@ -3,7 +3,6 @@ package com.example.dartadventure
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,8 +12,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,9 +24,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,7 +49,8 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.systemBars())
-        controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         setContent {
             DartAdventureTheme {
                 val navController = androidx.navigation.compose.rememberNavController()
@@ -79,44 +81,72 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.startup_path), // Make sure this image exists!
+            painter = painterResource(id = R.drawable.startup_path),
             contentDescription = "Dartboard Background",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Add this
+        // Use Box to position elements independently
+        Box(
+            modifier = Modifier.fillMaxSize(), // Make the Box fill the entire screen
         ) {
-            Spacer(modifier = Modifier.height(100.dp)) // Increased spacer height
-            Button(
-                onClick = { navController.navigate("select_level") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1DA446),
-                    contentColor = Color.White
-                ),
+            // Top-centered Text
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .background( // Add a background with the gradient
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                Color(0xFF4CAF50),
-                                Color(0xFF1B5E20),
-                                Color(0xFF4CAF50)
-                            )
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(2.dp) // Add padding *before* the border
-                    .border(
-                        width = 2.dp,
-                        color = Color.Transparent, // Make the border transparent
-                        shape = RoundedCornerShape(8.dp)
-                    ),
+                    .align(Alignment.TopCenter)
+                    .offset(y = 320.dp)
             ) {
                 Text(
-                    "Start Game",
-                    fontSize = 50.sp,
+                    text = "Dart Adventure",
+                    style = TextStyle(
+                        fontSize = 64.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray,
+                        textAlign = TextAlign.Center,
+                    )
                 )
+
+            }
+            // Bottom-centered Button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .offset(y = -70.dp)
+            ) {
+
+                Spacer(modifier = Modifier.height(100.dp))
+                Button(
+                    onClick = { navController.navigate("select_level") },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .background(
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF4CAF50),
+                                    Color(0xFF1B5E20),
+                                    Color(0xFF4CAF50)
+                                )
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(2.dp)
+                        .border(
+                            width = 2.dp,
+                            color = Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                ) {
+                    Text(
+                        "Start Game",
+                        fontSize = 50.sp,
+                    )
+                }
             }
         }
     }
