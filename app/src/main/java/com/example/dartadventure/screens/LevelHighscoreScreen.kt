@@ -12,6 +12,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,22 +25,24 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.dartadventure.utils.StorageHelper
 import com.example.dartadventure.data.HighscoreGameState
 import com.example.dartadventure.data.calculateStars
 import com.example.dartadventure.data.getLevelResult
 import com.example.dartadventure.data.updateHighscoreGameState
+import com.example.dartadventure.utils.StorageHelper
 
 @Composable
-fun LevelHighscoreScreen(navController: NavController) {
-    var gameState by remember { mutableStateOf(HighscoreGameState()) }
+fun LevelHighscoreScreen(
+    navController: NavController,
+    gameState: MutableState<HighscoreGameState>
+) {
     var throwScoreInput by remember { mutableStateOf("") }
     var isInputValid by remember { mutableStateOf(true) }
     var currentStars by remember { mutableStateOf(0) }
 
     // Update stars whenever the score changes
-    LaunchedEffect(gameState.currentScore) {
-        currentStars = calculateStars(gameState.currentScore)
+    LaunchedEffect(gameState.value.currentScore) {
+        currentStars = calculateStars(gameState.value.currentScore)
     }
 
     Column(
@@ -50,9 +53,9 @@ fun LevelHighscoreScreen(navController: NavController) {
         Text("Highscore")
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Score: ${gameState.currentScore}")
+        Text("Score: ${gameState.value.currentScore}")
         Text("Stars: $currentStars")
-        Text("Throws Remaining: ${gameState.throwsRemaining?.div(3) ?: 0}") // Display groups of 3, handle null
+        Text("Throws Remaining: ${gameState.value.throwsRemaining}")
 
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -61,9 +64,9 @@ fun LevelHighscoreScreen(navController: NavController) {
             onValueChange = {
                 throwScoreInput = it
                 isInputValid =
-                    it.toIntOrNull() != null && it.toInt() >= 0 && it.toInt() <= 180 // Basic validation
+                    it.toIntOrNull() != null && it.toInt() >= 0 && it.toInt() <= 180
             },
-            label = { Text("Enter Score for This Throw (3 Darts)") }, // Clarify input
+            label = { Text("Enter Score for This Throw (3 Darts)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             isError = !isInputValid,
             modifier = Modifier.width(280.dp)
@@ -81,20 +84,17 @@ fun LevelHighscoreScreen(navController: NavController) {
             onClick = {
                 val throwScore = throwScoreInput.toIntOrNull()
                 if (throwScore != null && throwScore >= 0) {
-                    gameState = updateHighscoreGameState(gameState, throwScore)
-                    throwScoreInput = "" // Clear the input field after a valid throw
+                    gameState.value = updateHighscoreGameState(gameState.value, throwScore)
+                    throwScoreInput = ""
 
-                    if (gameState.throwsRemaining != null) {
-                        if (gameState.throwsRemaining <= 0) {
-                            // Game over, save results and navigate back
-                            val levelResult = getLevelResult(gameState)
-                            StorageHelper.saveLevelResult(levelResult)
-                            navController.popBackStack()
-                        }
+                    if (gameState.value.throwsRemaining <= 0) {
+                        val levelResult = getLevelResult(gameState.value)
+                        StorageHelper.saveLevelResult(levelResult)
+                        navController.popBackStack()
                     }
                 }
             },
-            enabled = (gameState.throwsRemaining == null || gameState.throwsRemaining > 0) && isInputValid // Handle null
+            enabled = gameState.value.throwsRemaining > 0 && isInputValid
         ) {
             Text("Thrown (3 darts)")
         }
@@ -105,7 +105,9 @@ fun LevelHighscoreScreen(navController: NavController) {
 @Preview(name = "Pixel 7 pro", device = Devices.PIXEL_7_PRO)
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
-fun LevelHighrcorePreview() {
+fun LevelHighscorePreview() { // Corrected typo in function name
     val navController = rememberNavController()
-    LevelHighscoreScreen(navController = navController)
+    val mockGameState =
+        remember { mutableStateOf(HighscoreGameState(throwsRemaining = 5)) } // Provide initial gameState
+    LevelHighscoreScreen(navController = navController, gameState = mockGameState)
 }

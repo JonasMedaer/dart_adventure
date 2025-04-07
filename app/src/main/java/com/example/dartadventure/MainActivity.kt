@@ -44,7 +44,6 @@ class MainActivity : ComponentActivity() {
             DartAdventureTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation(
-                        innerPadding = innerPadding,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

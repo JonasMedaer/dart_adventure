@@ -64,7 +64,7 @@ fun Chapter1GamesList(
                 val gameStars = gameResult?.stars ?: 0
                 Button(onClick = {
                     when (game.id) {
-                        1 -> navController.navigate("highscore_game") // Update with your actual routes
+                        1 -> navController.navigate("highscore_game/${chapter.id}") // Pass chapter ID
                         2 -> navController.navigate("around_the_clock")
                         // Add navigation for other games in Chapter 1
                     }

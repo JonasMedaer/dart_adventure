@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +21,8 @@ import com.example.dartadventure.utils.StorageHelper
 
 @Composable
 fun SettingsScreen(navController: NavController) {
+    val showDialog = remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -28,9 +33,7 @@ fun SettingsScreen(navController: NavController) {
 
         Button(
             onClick = {
-                // Clear all level results from SharedPreferences
-                clearAllScores()
-                // Optionally, show a confirmation message to the user
+                showDialog.value = true
             }
         ) {
             Text("Clear All Scores")
@@ -46,15 +49,37 @@ fun SettingsScreen(navController: NavController) {
             Text("Back")
         }
     }
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text("Confirm Clear Scores") },
+            text = { Text("Are you sure you want to clear all saved scores?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        clearAllScores()
+                        showDialog.value = false
+                        // Optionally, show a confirmation message (e.g., a Snackbar)
+                    }
+                ) {
+                    Text("Clear")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 fun clearAllScores() {
-    // Get all keys from SharedPreferences and remove the ones related to level results
-    val prefs =
-        StorageHelper.getSharedPreferences() // Assuming you have a function to get the SharedPreferences instance
+    val prefs = StorageHelper.getSharedPreferences()
     val editor = prefs.edit()
     for (key in prefs.all.keys) {
-        if (key.startsWith("level_result_")) { // Assuming your keys start with "level_result_"
+        if (key.startsWith("level_result_")) {
             editor.remove(key)
         }
     }
