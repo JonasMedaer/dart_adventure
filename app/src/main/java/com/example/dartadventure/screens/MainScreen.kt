@@ -1,4 +1,4 @@
-package com.example.dartadventure
+package com.example.dartadventure.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.dartadventure.R
 import com.example.dartadventure.ui.theme.DartAdventureTheme
 
 @Composable

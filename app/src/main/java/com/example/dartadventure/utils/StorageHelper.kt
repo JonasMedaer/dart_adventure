@@ -1,7 +1,8 @@
-package com.example.dartadventure
+package com.example.dartadventure.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.dartadventure.data.LevelResult
 import com.google.gson.Gson
 
 object StorageHelper {
@@ -16,13 +17,14 @@ object StorageHelper {
     }
 
     fun saveLevelResult(levelResult: LevelResult) {
-        val key = "$LEVEL_RESULT_KEY_PREFIX${levelResult.level}"
+        val key =
+            "$LEVEL_RESULT_KEY_PREFIX${levelResult.chapter}_${levelResult.game}" // Composite key
         val json = gson.toJson(levelResult)
         sharedPreferences.edit().putString(key, json).apply()
     }
 
-    fun getLevelResult(level: Int): LevelResult? {
-        val key = "$LEVEL_RESULT_KEY_PREFIX$level"
+    fun getLevelResult(chapterId: Int, gameId: Int): LevelResult? { // Modified parameters
+        val key = "$LEVEL_RESULT_KEY_PREFIX${chapterId}_${gameId}" // Composite key
         val json = sharedPreferences.getString(key, null) ?: return null
         return gson.fromJson(json, LevelResult::class.java)
     }
