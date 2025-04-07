@@ -12,8 +12,8 @@ val chapters = listOf(
         games = listOf(
             Game(
                 id = 1,
-                name = "Bullseye Challenge",
-                description = "Hit as many bullseyes as you can!"
+                name = "Highscore",
+                description = "Score as many points as you can!"
             ),
             Game(
                 id = 2,

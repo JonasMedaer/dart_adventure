@@ -1,3 +1,4 @@
+// Chapter1GamesList.kt
 package com.example.dartadventure.screens
 
 import android.content.res.Configuration
@@ -22,14 +23,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
-import com.example.dartadventure.chapters
+import com.example.dartadventure.data.Chapter
+import com.example.dartadventure.data.Game
 import com.example.dartadventure.data.LevelResult
-import com.example.dartadventure.utils.StorageHelper
 
 @Composable
-fun Chapter1GameSelectScreen(
+fun Chapter1GamesList(
     navController: NavController,
-    getGameResult: (Int) -> LevelResult? = { gameId -> StorageHelper.getLevelResult(1, gameId) }
+    chapter: Chapter,
+    getLevelResult: (Int) -> LevelResult?
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -54,16 +56,15 @@ fun Chapter1GameSelectScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Chapter: Chapter 1")
+            Text("Chapter: ${chapter.name}") // Display chapter name
             Spacer(modifier = Modifier.height(24.dp))
-            val chapter = chapters.find { it.id == 1 } ?: return
             chapter.games.forEach { game ->
-                val gameResult = getGameResult(game.id)
+                val gameResult = getLevelResult(game.id)
                 val gameHighscore = gameResult?.score ?: 0
                 val gameStars = gameResult?.stars ?: 0
                 Button(onClick = {
                     when (game.id) {
-                        1 -> navController.navigate("highscore_game")
+                        1 -> navController.navigate("highscore_game") // Update with your actual routes
                         2 -> navController.navigate("around_the_clock")
                         // Add navigation for other games in Chapter 1
                     }
@@ -77,24 +78,32 @@ fun Chapter1GameSelectScreen(
     }
 }
 
-
-private fun getMockGameResult(gameId: Int): LevelResult? {
-    // Mock data for preview
-    return when (gameId) {
-        1 -> LevelResult(chapter = 1, game = 1, score = 150, stars = 3)
-        2 -> LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
-        else -> null
-    }
-}
-
 @Preview(showBackground = true)
 @Preview(name = "Pixel 7 pro", device = Devices.PIXEL_7_PRO)
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
-fun Chapter1GameSelectScreenPreview() {
+fun Chapter1GamesListPreview() {
     val navController = rememberNavController()
-    Chapter1GameSelectScreen(
+    // Mock Chapter and Game data
+    val mockChapter = Chapter(
+        id = 1,
+        name = "Chapter 1",
+        description = "First Chapter",
+        games = listOf(
+            Game(id = 1, name = "Game 1", description = "First Game"),
+            Game(id = 2, name = "Game 2", description = "Second Game")
+        ),
+        requiredStars = 5,
+        isUnlocked = true
+    )
+    // Mock LevelResult data
+    val mockLevelResults = mapOf(
+        1 to LevelResult(chapter = 1, game = 1, score = 150, stars = 3),
+        2 to LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
+    )
+    Chapter1GamesList(
         navController = navController,
-        getGameResult = { gameId -> getMockGameResult(gameId) }
+        chapter = mockChapter,
+        getLevelResult = { gameId -> mockLevelResults[gameId] }
     )
 }

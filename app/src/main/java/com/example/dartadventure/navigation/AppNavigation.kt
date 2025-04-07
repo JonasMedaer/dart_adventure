@@ -8,6 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.dartadventure.screens.Chapter1GameSelectScreen
 import com.example.dartadventure.screens.ChapterSelectScreen
 import com.example.dartadventure.screens.DartboardBackgroundWithContent
 import com.example.dartadventure.screens.GameSelectScreen
@@ -30,6 +31,9 @@ fun AppNavigation(innerPadding: PaddingValues, modifier: Modifier = Modifier) {
         }
         composable("chapter_select") {
             ChapterSelectScreen(navController = navController)
+        }
+        composable("chapter1_games") {
+            Chapter1GameSelectScreen(navController)
         }
         composable("game_select/{chapterId}") { backStackEntry ->
             val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull() ?: 1

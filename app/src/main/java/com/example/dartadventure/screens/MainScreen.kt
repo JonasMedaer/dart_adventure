@@ -85,7 +85,7 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
 
                 Spacer(modifier = Modifier.height(100.dp))
                 Button(
-                    onClick = { navController.navigate("select_level") },
+                    onClick = { navController.navigate("chapter_select") },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
                         contentColor = Color.White

@@ -2,6 +2,7 @@ package com.example.dartadventure.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.data.LevelResult
 import com.google.gson.Gson
 
@@ -31,5 +32,11 @@ object StorageHelper {
 
     fun getSharedPreferences(): SharedPreferences {
         return sharedPreferences
+    }
+
+    fun calculateTotalStarsForChapter(chapter: Chapter): Int {
+        return chapter.games.sumOf { game ->
+            getLevelResult(chapter.id, game.id)?.stars ?: 0
+        }
     }
 }
