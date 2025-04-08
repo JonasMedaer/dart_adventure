@@ -42,27 +42,6 @@ fun updateHighscoreGameState(gameState: HighscoreGameState, throwScore: Int): Hi
     )
 }
 
-// Remove updateAroundTheClockGameState - logic moved to AroundTheClockScreen
-/*
-fun updateAroundTheClockGameState(
-    gameState: AroundTheClockGameState,
-    throwResult: ThrowResult
-): AroundTheClockGameState {
-    var newScore = gameState.currentScore
-    var newTarget = gameState.currentTarget
-    if (throwResult.hitNumber == newTarget) {
-        newScore += 10
-        newTarget++
-    }
-    return gameState.copy(
-        currentScore = newScore,
-        currentTarget = newTarget,
-        dartsThrown = gameState.dartsThrown + 1,
-        throws = gameState.throws.toMutableList()
-            .apply { add(DartThrow(throwResult.score)) }
-    )
-}
-*/
 
 fun <T : DartThrow> getLevelResult(gameState: GameState<T>): LevelResult {
     // Retrieve star thresholds based on chapter and game IDs

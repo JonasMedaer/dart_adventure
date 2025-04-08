@@ -28,7 +28,6 @@ val chapters = listOf(
                     10000 - (20 * 25), //9500
                     10000 - (20 * 20) //9600
                 ),
-                initialThrows = 5 // Or however many initial throws you want
             )
         ),
         requiredStars = 5,
@@ -44,7 +43,6 @@ val chapters = listOf(
                 name = "Shanghai",
                 description = "Score as many points as possible in 7 rounds.",
                 starThresholds = listOf(120, 180, 240, 300, 360),
-                initialThrows = 5
             ),
             Game(
                 id = 4,

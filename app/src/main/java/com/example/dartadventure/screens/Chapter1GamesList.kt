@@ -1,6 +1,7 @@
 // Chapter1GamesList.kt
 package com.example.dartadventure.screens
 
+import android.content.SharedPreferences
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -26,12 +32,15 @@ import com.example.dartadventure.R
 import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.data.LevelResult
+import com.example.dartadventure.utils.StorageHelper
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 @Composable
 fun Chapter1GamesList(
     navController: NavController,
     chapter: Chapter,
-    getLevelResult: (Int) -> LevelResult?
+    getLevelResult: (Int, Int) -> LevelResult?
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -41,6 +50,26 @@ fun Chapter1GamesList(
         R.drawable.levelselect_path_tablet
     } else {
         R.drawable.levelselect_path
+    }
+
+    var levelResultChanged by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { // Use Unit as the key to launch only once
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key?.startsWith("level_result_") == true) {
+                levelResultChanged = !levelResultChanged
+            }
+        }
+        val sharedPreferences = StorageHelper.getSharedPreferences()
+        try {
+            sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
+            while (currentCoroutineContext().isActive) {
+                // Keep the coroutine active to listen for changes
+                kotlinx.coroutines.delay(100) // Small delay to avoid busy-waiting
+            }
+        } finally {
+            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -56,17 +85,16 @@ fun Chapter1GamesList(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Chapter: ${chapter.name}") // Display chapter name
+            Text("Chapter: ${chapter.name}")
             Spacer(modifier = Modifier.height(24.dp))
             chapter.games.forEach { game ->
-                val gameResult = getLevelResult(game.id)
+                val gameResult = getLevelResult(chapter.id, game.id)
                 val gameHighscore = gameResult?.score ?: 0
                 val gameStars = gameResult?.stars ?: 0
                 Button(onClick = {
                     when (game.id) {
                         1 -> navController.navigate("highscore_game/${chapter.id}")
                         2 -> navController.navigate("around_the_clock/${chapter.id}")
-                        // Add navigation for other games in Chapter 1
                     }
                 }) {
                     Text(game.name)
@@ -84,7 +112,6 @@ fun Chapter1GamesList(
 @Composable
 fun Chapter1GamesListPreview() {
     val navController = rememberNavController()
-    // Mock Chapter and Game data
     val mockChapter = Chapter(
         id = 1,
         name = "Chapter 1",
@@ -96,14 +123,13 @@ fun Chapter1GamesListPreview() {
         requiredStars = 5,
         isUnlocked = true
     )
-    // Mock LevelResult data
     val mockLevelResults = mapOf(
-        1 to LevelResult(chapter = 1, game = 1, score = 150, stars = 3),
-        2 to LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
+        Pair(1, 1) to LevelResult(chapter = 1, game = 1, score = 150, stars = 3),
+        Pair(1, 2) to LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
     )
     Chapter1GamesList(
         navController = navController,
         chapter = mockChapter,
-        getLevelResult = { gameId -> mockLevelResults[gameId] }
+        getLevelResult = { chapterId, gameId -> mockLevelResults[Pair(chapterId, gameId)] }
     )
 }

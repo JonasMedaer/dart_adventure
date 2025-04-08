@@ -7,5 +7,5 @@ data class Game(
     val highscore: Int = 0,
     val stars: Int = 0,
     val starThresholds: List<Int>,
-    val initialThrows: Int
+    val initialThrows: Int? = null
 )
