@@ -3,7 +3,7 @@ package com.example.dartadventure.data
 data class AroundTheClockGameState(
     override val currentChapterId: Int = 1,
     override val currentGameId: Int = 1,
-    override val currentScore: Int = 1020,
+    override val currentScore: Int = 10000,
     val currentTarget: Int = 1,
     val dartsThrown: Int = 0,
     val totalDartsUsed: Int = 0,
@@ -14,5 +14,5 @@ data class AroundTheClockGameState(
     currentScore,
     throws
 )
-// Around the clock starts with 1020 points
-// scoring with all darts will result in a perfect score of 1000
+// Around the clock starts with 10000 points
+// scoring with all darts will result in a perfect score of 9800

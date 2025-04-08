@@ -21,14 +21,14 @@ val chapters = listOf(
                 id = 2,
                 name = "Around the Clock",
                 description = "Hit the numbers 1 to 20 in order.",
-                starThresholds = listOf(
-                    800,
-                    700,
-                    600,
-                    500,
-                    400
+                starThresholds = listOf( // Base score - (20 numbers * (amount of darts * 10))
+                    10000 - (20 * 40), //9200
+                    10000 - (20 * 35), //9300
+                    10000 - (20 * 30), //9400
+                    10000 - (20 * 25), //9500
+                    10000 - (20 * 20) //9600
                 ),
-                initialThrows = 5
+                initialThrows = 5 // Or however many initial throws you want
             )
         ),
         requiredStars = 5,
