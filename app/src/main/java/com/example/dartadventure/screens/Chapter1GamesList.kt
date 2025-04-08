@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
+import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
-import com.example.dartadventure.data.Game
 import com.example.dartadventure.data.LevelResult
 
 @Composable
@@ -64,8 +64,8 @@ fun Chapter1GamesList(
                 val gameStars = gameResult?.stars ?: 0
                 Button(onClick = {
                     when (game.id) {
-                        1 -> navController.navigate("highscore_game/${chapter.id}") // Pass chapter ID
-                        2 -> navController.navigate("around_the_clock")
+                        1 -> navController.navigate("highscore_game/${chapter.id}")
+                        2 -> navController.navigate("around_the_clock/${chapter.id}")
                         // Add navigation for other games in Chapter 1
                     }
                 }) {
@@ -90,8 +90,8 @@ fun Chapter1GamesListPreview() {
         name = "Chapter 1",
         description = "First Chapter",
         games = listOf(
-            Game(id = 1, name = "Game 1", description = "First Game"),
-            Game(id = 2, name = "Game 2", description = "Second Game")
+            createMockGame(id = 1, name = "Game 1", description = "First Game"),
+            createMockGame(id = 2, name = "Game 2", description = "Second Game")
         ),
         requiredStars = 5,
         isUnlocked = true

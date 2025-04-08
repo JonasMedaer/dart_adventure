@@ -34,7 +34,8 @@ import com.example.dartadventure.utils.StorageHelper
 @Composable
 fun LevelHighscoreScreen(
     navController: NavController,
-    gameState: MutableState<HighscoreGameState>
+    gameState: MutableState<HighscoreGameState>,
+    starThresholds: List<Int> // Add this parameter
 ) {
     var throwScoreInput by remember { mutableStateOf("") }
     var isInputValid by remember { mutableStateOf(true) }
@@ -42,7 +43,8 @@ fun LevelHighscoreScreen(
 
     // Update stars whenever the score changes
     LaunchedEffect(gameState.value.currentScore) {
-        currentStars = calculateStars(gameState.value.currentScore)
+        currentStars =
+            calculateStars(gameState.value.currentScore, starThresholds) // Pass thresholds
     }
 
     Column(
@@ -105,9 +107,14 @@ fun LevelHighscoreScreen(
 @Preview(name = "Pixel 7 pro", device = Devices.PIXEL_7_PRO)
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
-fun LevelHighscorePreview() { // Corrected typo in function name
+fun LevelHighscorePreview() {
     val navController = rememberNavController()
-    val mockGameState =
-        remember { mutableStateOf(HighscoreGameState(throwsRemaining = 5)) } // Provide initial gameState
-    LevelHighscoreScreen(navController = navController, gameState = mockGameState)
+    val mockGameState = remember { mutableStateOf(HighscoreGameState(throwsRemaining = 5)) }
+    val mockStarThresholds = listOf(100, 150, 200, 250, 300) // Provide mock thresholds
+
+    LevelHighscoreScreen(
+        navController = navController,
+        gameState = mockGameState,
+        starThresholds = mockStarThresholds // Pass mock thresholds
+    )
 }

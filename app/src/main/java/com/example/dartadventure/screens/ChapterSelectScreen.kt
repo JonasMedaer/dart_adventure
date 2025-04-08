@@ -26,8 +26,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
+import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
-import com.example.dartadventure.data.Game
 import com.example.dartadventure.utils.StorageHelper
 
 @Composable
@@ -94,8 +94,22 @@ fun ChapterSelectScreenPreview() {
     // Mock chapters with some star data for the preview
     val mockChapters = remember {
         listOf(
-            Chapter(1, "Chapter 1", "Desc 1", listOf(Game(1, "Game 1", "Desc")), 5, true),
-            Chapter(2, "Chapter 2", "Desc 2", listOf(Game(2, "Game 2", "Desc")), 10, false)
+            Chapter(
+                1,
+                "Chapter 1",
+                "Desc 1",
+                listOf(createMockGame(1, "Game 1", "Desc")), // Use createMockGame
+                5,
+                true
+            ),
+            Chapter(
+                2,
+                "Chapter 2",
+                "Desc 2",
+                listOf(createMockGame(2, "Game 2", "Desc")), // Use createMockGame
+                10,
+                false
+            )
         )
     }
     // Mock the calculateTotalStarsForChapter function for the preview

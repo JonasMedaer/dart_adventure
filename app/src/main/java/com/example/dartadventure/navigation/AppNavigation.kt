@@ -6,14 +6,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.chapters
+import com.example.dartadventure.data.AroundTheClockGameState
 import com.example.dartadventure.data.HighscoreGameState
 import com.example.dartadventure.data.LevelResult
+import com.example.dartadventure.screens.AroundTheClockScreen
 import com.example.dartadventure.screens.Chapter1GamesList
 import com.example.dartadventure.screens.ChapterSelectScreen
 import com.example.dartadventure.screens.DartboardBackgroundWithContent
@@ -56,7 +57,22 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
         composable("highscore_game/{chapterId}") { backStackEntry -> // Parameterized route
             val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull() ?: 1
-            val initialThrows = if (chapterId == 2) 10 else 5 // Determine throws based on chapter
+
+            // Retrieve game data
+            val chapter = chapters.find { it.id == chapterId }
+            val game = chapter?.games?.find { it.id == 1 } // Assuming Highscore game ID is 1
+
+            // Get initial throws and star thresholds from game data
+            val initialThrows =
+                game?.initialThrows ?: 5 // Provide a default if not found (or handle the error)
+            val starThresholds = game?.starThresholds ?: listOf(
+                100,
+                150,
+                200,
+                250,
+                300
+            ) // Provide a default if not found (or handle the error)
+
             val gameState = remember {
                 mutableStateOf(
                     HighscoreGameState(
@@ -65,16 +81,24 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     )
                 )
             }
-            LevelHighscoreScreen(navController = navController, gameState = gameState)
+
+            LevelHighscoreScreen(
+                navController = navController,
+                gameState = gameState,
+                starThresholds = starThresholds
+            )
         }
-        composable("around_the_clock") {
-            AroundTheClockScreen(navController = navController) // Replace with your actual composable
+        composable("around_the_clock/{chapterId}") { backStackEntry -> // Parameterized route
+            val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull() ?: 1
+            val gameState = remember {
+                mutableStateOf(
+                    AroundTheClockGameState(
+                        currentChapterId = chapterId,
+                        // You might adjust other initial state properties based on chapterId if needed
+                    )
+                )
+            }
+            AroundTheClockScreen(navController = navController, gameState = gameState)
         }
     }
 }
-
-@Composable
-fun AroundTheClockScreen(navController: NavController) {
-    // Placeholder composable - no content yet
-}
-

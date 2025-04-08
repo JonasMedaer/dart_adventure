@@ -1,9 +1,8 @@
 package com.example.dartadventure.data
 
-// Base GameState
-open class GameState(
-    open val currentChapterId: Int = 1,
-    open val currentGameId: Int = 1,
-    open val currentScore: Int = 0,
-    open val throws: MutableList<DartThrow> = mutableListOf()
+abstract class GameState<T : DartThrow>( // Make GameState generic
+    open val currentChapterId: Int,
+    open val currentGameId: Int,
+    open val currentScore: Int,
+    open val throws: MutableList<T> // Use the generic type T
 )

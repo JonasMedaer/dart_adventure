@@ -17,11 +17,22 @@ object StorageHelper {
         sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    fun saveLevelResult(levelResult: LevelResult) {
-        val key =
-            "$LEVEL_RESULT_KEY_PREFIX${levelResult.chapter}_${levelResult.game}" // Composite key
-        val json = gson.toJson(levelResult)
-        sharedPreferences.edit().putString(key, json).apply()
+    fun saveLevelResult(newLevelResult: LevelResult) {
+        val key = "$LEVEL_RESULT_KEY_PREFIX${newLevelResult.chapter}_${newLevelResult.game}"
+        val existingResultJson = sharedPreferences.getString(key, null)
+        if (existingResultJson != null) {
+            val existingResult = gson.fromJson(existingResultJson, LevelResult::class.java)
+            if (newLevelResult.score > existingResult.score) {
+                // New score is higher, update the stored result
+                val json = gson.toJson(newLevelResult)
+                sharedPreferences.edit().putString(key, json).apply()
+            }
+            // If the new score is not higher, we don't update, preserving the high score
+        } else {
+            // No existing result, save the new result
+            val json = gson.toJson(newLevelResult)
+            sharedPreferences.edit().putString(key, json).apply()
+        }
     }
 
     fun getLevelResult(chapterId: Int, gameId: Int): LevelResult? { // Modified parameters

@@ -1,3 +1,7 @@
 package com.example.dartadventure.data
 
-data class DartThrow(val score: Int)
+sealed class DartThrow
+
+data class HighscoreDartThrow(val score: Int) : DartThrow()
+
+data class AroundTheClockDartThrow(val target: Int, val hit: Boolean) : DartThrow()
