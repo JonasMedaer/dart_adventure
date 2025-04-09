@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,13 +25,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
@@ -65,14 +63,12 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
             ) {
                 Text(
                     text = "Dart Adventure",
-                    style = TextStyle(
-                        fontSize = 64.sp,
-                        fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        // Use a new style
                         color = Color.DarkGray,
                         textAlign = TextAlign.Center,
                     )
                 )
-
             }
             // Bottom-centered Button
             Column(
@@ -82,7 +78,6 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     .align(Alignment.BottomCenter)
                     .offset(y = -70.dp)
             ) {
-
                 Spacer(modifier = Modifier.height(100.dp))
                 Button(
                     onClick = { navController.navigate("chapter_select") },
@@ -110,14 +105,16 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                 ) {
                     Text(
                         "Start Game",
-                        fontSize = 50.sp,
+                        style = MaterialTheme.typography.headlineLarge // Use a new style
                     )
-
                 }
                 Button(onClick = {
                     navController.navigate("settings")
                 }) {
-                    Text("Settings")
+                    Text(
+                        "Settings",
+                        style = MaterialTheme.typography.labelLarge
+                    ) // Use an existing style
                 }
             }
         }

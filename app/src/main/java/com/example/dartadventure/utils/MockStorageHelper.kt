@@ -1,45 +1,45 @@
 package com.example.dartadventure.utils
 
-import android.content.Context
 import android.content.SharedPreferences
 import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.data.LevelResult
 import com.google.gson.Gson
 
-object StorageHelper : StorageInterface {
-    private const val PREFS_NAME = "DartAdventurePrefs"
+object MockStorageHelper : StorageInterface {
     private const val LEVEL_RESULT_KEY_PREFIX = "level_result_"
-
-    private lateinit var sharedPreferences: SharedPreferences
+    private val mockLevelResults = mutableMapOf<String, LevelResult>()
     private val gson = Gson()
+    private var isInitialized = false
 
-    fun initialize(context: Context) {
-        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    fun initialize() {
+        isInitialized = true
+        println("MockStorageHelper initialized")
     }
 
     override fun saveLevelResult(newLevelResult: LevelResult) {
+        if (!isInitialized) {
+            println("Warning: MockStorageHelper not initialized!")
+            return
+        }
         val key = "$LEVEL_RESULT_KEY_PREFIX${newLevelResult.chapter}_${newLevelResult.game}"
-        val existingResultJson = sharedPreferences.getString(key, null)
-        if (existingResultJson != null) {
-            val existingResult = gson.fromJson(existingResultJson, LevelResult::class.java)
-            if (newLevelResult.score > existingResult.score) {
-                val json = gson.toJson(newLevelResult)
-                sharedPreferences.edit().putString(key, json).apply()
-            }
+        val existingResult = mockLevelResults[key]
+        if (existingResult == null || newLevelResult.score > existingResult.score) {
+            mockLevelResults[key] = newLevelResult
+            println("MockStorageHelper saved: $newLevelResult with key: $key")
         } else {
-            val json = gson.toJson(newLevelResult)
-            sharedPreferences.edit().putString(key, json).apply()
+            println("MockStorageHelper: New score not higher, not updating for key: $key")
         }
     }
 
     override fun getLevelResult(chapterId: Int, gameId: Int): LevelResult? {
         val key = "$LEVEL_RESULT_KEY_PREFIX${chapterId}_${gameId}"
-        val json = sharedPreferences.getString(key, null) ?: return null
-        return gson.fromJson(json, LevelResult::class.java)
+        val result = mockLevelResults[key]
+        println("MockStorageHelper retrieved for key: $key -> $result")
+        return result
     }
 
-    override fun getSharedPreferences(): SharedPreferences {
-        return sharedPreferences
+    override fun getSharedPreferences(): SharedPreferences? {
+        return null // Or throw an UnsupportedOperationException if your mock doesn't need this
     }
 
     override fun calculateTotalStarsForChapter(chapter: Chapter): Int {

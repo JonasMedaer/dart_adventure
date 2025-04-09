@@ -15,6 +15,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.example.dartadventure.navigation.AppNavigation
 import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.StorageHelper
+import com.example.dartadventure.utils.StorageInterface
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,6 +23,7 @@ class MainActivity : ComponentActivity() {
 
         // Initialize StorageHelper
         StorageHelper.initialize(applicationContext)
+        val storageHelper: StorageInterface = StorageHelper
 
         // Fullscreen setup
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -44,7 +46,8 @@ class MainActivity : ComponentActivity() {
             DartAdventureTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation(
-                        modifier = Modifier.padding(innerPadding)
+                        modifier = Modifier.padding(innerPadding),
+                        storageHelper = storageHelper // Pass the storageHelper here
                     )
                 }
             }
@@ -56,6 +59,3 @@ class MainActivity : ComponentActivity() {
         super.onDestroy()
     }
 }
-
-
-

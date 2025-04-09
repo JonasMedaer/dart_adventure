@@ -1,13 +1,14 @@
 package com.example.dartadventure.screens.games
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,28 +30,31 @@ import com.example.dartadventure.data.aroundtheclock.updateAroundTheClockGameSta
 import com.example.dartadventure.data.games.Game
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.calculateStars
+import com.example.dartadventure.utils.MockStorageHelper
 import com.example.dartadventure.utils.StorageHelper
+import com.example.dartadventure.utils.StorageInterface
 
 @Composable
 fun AroundTheClockScreen(
     navController: NavController,
     gameState: MutableState<AroundTheClockGameState>,
-    getGameData: (Int) -> Game?
+    getGameData: (Int) -> Game?,
+    storageHelper: StorageInterface // Ensure you have this parameter
 ) {
     var dartsThisTurn by remember { mutableStateOf(0) }
-    val levelResult = StorageHelper.getLevelResult(
+
+    // Use the passed storageHelper here
+    val levelResult = storageHelper.getLevelResult(
         gameState.value.currentChapterId,
         gameState.value.currentGameId
     )
     val game = getGameData(gameState.value.currentGameId)
     val starThresholds = game?.starThresholds ?: emptyList()
     var currentStars by remember {
-        mutableStateOf(
-            levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
-        )
+        mutableStateOf(levelResult?.stars ?: 0) // Initialize with levelResult or 0
     }
     // Initialize mustEndOnBullseye once when the screen is composed
-    LaunchedEffect(Unit) {
+    LaunchedEffect(game) { // Key by game
         if (!gameState.value.initialized) {
             val mustEndOnBullseye = game?.mustEndOnBullseye ?: false
             gameState.value = gameState.value.copy(
@@ -58,18 +62,23 @@ fun AroundTheClockScreen(
                 initialized = true
             )
         }
+        currentStars =
+            levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
     }
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Around the Clock")
+        Text("Around the Clock", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Target: ${gameState.value.currentTarget}")
-        Text("Total Darts Used: ${gameState.value.totalDartsUsed}")
-        Text("Current Stars: $currentStars")
-        Text("Score: ${gameState.value.currentScore}")
+        Text("Target: ${gameState.value.currentTarget}", style = MaterialTheme.typography.bodyLarge)
+        Text(
+            "Total Darts Used: ${gameState.value.totalDartsUsed}",
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Text("Current Stars: $currentStars", style = MaterialTheme.typography.bodyLarge)
+        Text("Score: ${gameState.value.currentScore}", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
@@ -83,22 +92,19 @@ fun AroundTheClockScreen(
                         if (gameState.value.gameFinished) {
                             val finalScore =
                                 calculateAroundTheClockScore(gameState.value.totalDartsUsed)
-                            val game = getGameData(gameState.value.currentGameId)
-                            val stars = if (game != null) calculateStars(
+                            val currentGame = getGameData(gameState.value.currentGameId)
+                            val stars = if (currentGame != null) calculateStars(
                                 finalScore,
-                                game.starThresholds
+                                currentGame.starThresholds
                             ) else 0
-                            val levelResult = LevelResult(
+                            val newLevelResult = LevelResult(
                                 chapter = gameState.value.currentChapterId,
                                 game = gameState.value.currentGameId,
                                 score = finalScore,
                                 stars = stars
                             )
-                            Log.d(
-                                "AroundTheClock",
-                                "Saving LevelResult with chapterId: ${gameState.value.currentChapterId}, gameId: ${gameState.value.currentGameId}"
-                            )
-                            StorageHelper.saveLevelResult(levelResult)
+                            // Use the passed storageHelper here as well for saving
+                            storageHelper.saveLevelResult(newLevelResult)
                             navController.popBackStack()
                         }
                     }
@@ -107,9 +113,10 @@ fun AroundTheClockScreen(
                     }
                     currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
-                enabled = dartsThisTurn < 3
+                enabled = dartsThisTurn < 3,
+                modifier = Modifier.width(120.dp)
             ) {
-                Text("Hit")
+                Text("Hit", style = MaterialTheme.typography.labelLarge)
             }
             Button(
                 onClick = {
@@ -125,9 +132,10 @@ fun AroundTheClockScreen(
                     }
                     currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
-                enabled = dartsThisTurn < 3
+                enabled = dartsThisTurn < 3,
+                modifier = Modifier.width(120.dp)
             ) {
-                Text("Miss")
+                Text("Miss", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
@@ -140,10 +148,8 @@ fun AroundTheClockScreen(
 fun AroundTheClockScreenPreview() {
     val navController = rememberNavController()
     val mockGameState = remember { mutableStateOf(AroundTheClockGameState()) }
-    AroundTheClockScreen(
-        navController = navController,
-        gameState = mockGameState,
-        getGameData = { gameId ->
+    val mockGetGameData: (Int) -> Game? = remember {
+        { gameId ->
             Game(
                 id = gameId,
                 name = "Mock Game",
@@ -152,5 +158,15 @@ fun AroundTheClockScreenPreview() {
                 initialThrows = null
             )
         }
+    }
+
+    MockStorageHelper.initialize()
+    val mockStorageHelper: StorageInterface = MockStorageHelper
+
+    AroundTheClockScreen(
+        navController = navController,
+        gameState = mockGameState,
+        getGameData = mockGetGameData,
+        storageHelper = mockStorageHelper // Pass the mock instance
     )
 }
