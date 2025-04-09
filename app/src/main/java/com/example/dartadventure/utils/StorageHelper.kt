@@ -50,4 +50,14 @@ object StorageHelper {
             getLevelResult(chapter.id, game.id)?.stars ?: 0
         }
     }
+
+    fun calculateMaxPossibleStarsForChapter(chapter: Chapter): Int {
+        return chapter.games.sumOf { it.starThresholds.size }
+    }
+
+    fun calculateOverallStars(chapters: List<Chapter>): Pair<Int, Int> {
+        val totalCurrentStars = chapters.sumOf { StorageHelper.calculateTotalStarsForChapter(it) }
+        val totalPossibleStars = chapters.sumOf { calculateMaxPossibleStarsForChapter(it) }
+        return Pair(totalCurrentStars, totalPossibleStars)
+    }
 }

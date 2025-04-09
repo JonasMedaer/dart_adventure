@@ -31,7 +31,7 @@ val chapters = listOf(
                 mustEndOnBullseye = false
             )
         ),
-        requiredStars = 5,
+        requiredStars = 0,
         isUnlocked = true
     ),
     Chapter(

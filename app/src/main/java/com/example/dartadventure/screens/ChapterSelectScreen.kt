@@ -29,16 +29,20 @@ import com.example.dartadventure.R
 import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.utils.StorageHelper
+import com.example.dartadventure.utils.StorageHelper.calculateMaxPossibleStarsForChapter
 
 @Composable
 fun ChapterSelectScreen(
     navController: NavController,
     chapters: List<Chapter> = com.example.dartadventure.chapters,
     calculateTotalStars: (Chapter) -> Int = { chapter ->
-        StorageHelper.calculateTotalStarsForChapter(
-            chapter
-        )
-    } // Default to your actual function
+        StorageHelper.calculateTotalStarsForChapter(chapter)
+    },
+    calculateOverallStars: (List<Chapter>) -> Pair<Int, Int> = { chapters ->
+        val totalCurrentStars = chapters.sumOf { calculateTotalStars(it) }
+        val totalPossibleStars = chapters.sumOf { calculateMaxPossibleStarsForChapter(it) }
+        Pair(totalCurrentStars, totalPossibleStars)
+    }
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -49,7 +53,14 @@ fun ChapterSelectScreen(
     } else {
         R.drawable.chapterselect_0
     }
-
+    val (overallCurrentStars, overallPossibleStars) = calculateOverallStars(chapters)
+    // Define unlock thresholds for each chapter (you can adjust these)
+    val unlockThresholds = mapOf(
+        1 to 0,   // Chapter 1 unlocks at 0 stars (always unlocked)
+        2 to 6,   // Chapter 2 unlocks at 5 stars
+        3 to 15,  // Chapter 3 unlocks at 15 stars
+        // ... add more chapters and thresholds as needed
+    )
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = backgroundImage),
@@ -57,13 +68,15 @@ fun ChapterSelectScreen(
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-
         Column(modifier = Modifier.padding(16.dp)) {
-            Spacer(modifier = Modifier.height(32.dp)) // Add some top padding
+            Spacer(modifier = Modifier.height(32.dp))
             Text("Select a Chapter")
+            Text("Total Stars: $overallCurrentStars / $overallPossibleStars")
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn {
                 items(chapters) { chapter ->
+                    val isUnlocked =
+                        unlockThresholds[chapter.id]?.let { overallCurrentStars >= it } ?: true
                     Row(
                         modifier = Modifier.padding(vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -71,12 +84,22 @@ fun ChapterSelectScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(chapter.name)
                             val totalStars = calculateTotalStars(chapter)
-                            Text("Total Stars: $totalStars / ${chapter.requiredStars}")
+                            val maxPossibleStars = calculateMaxPossibleStarsForChapter(chapter)
+                            val displayText = if (isUnlocked) {
+                                "Total Stars: $totalStars / $maxPossibleStars"
+                            } else {
+                                val requiredStars = unlockThresholds[chapter.id] ?: 0
+                                "Total Stars: $totalStars / $maxPossibleStars (Requires $requiredStars overall)"
+                            }
+                            Text(displayText)
                         }
-                        Button(onClick = {
-                            navController.navigate("game_select/${chapter.id}")
-                        }) {
-                            Text("Select")
+                        Button(
+                            onClick = {
+                                navController.navigate("game_select/${chapter.id}")
+                            },
+                            enabled = isUnlocked
+                        ) {
+                            Text(if (isUnlocked) "Select" else "Locked")
                         }
                     }
                 }
@@ -91,28 +114,12 @@ fun ChapterSelectScreen(
 @Composable
 fun ChapterSelectScreenPreview() {
     val navController = rememberNavController()
-    // Mock chapters with some star data for the preview
     val mockChapters = remember {
         listOf(
-            Chapter(
-                1,
-                "Chapter 1",
-                "Desc 1",
-                listOf(createMockGame(1, "Game 1", "Desc")), // Use createMockGame
-                5,
-                true
-            ),
-            Chapter(
-                2,
-                "Chapter 2",
-                "Desc 2",
-                listOf(createMockGame(2, "Game 2", "Desc")), // Use createMockGame
-                10,
-                false
-            )
+            Chapter(1, "Chapter 1", "Desc 1", listOf(createMockGame(1, "Game 1", "Desc")), 0),
+            Chapter(2, "Chapter 2", "Desc 2", listOf(createMockGame(2, "Game 2", "Desc")), 6)
         )
     }
-    // Mock the calculateTotalStarsForChapter function for the preview
     val mockCalculateStars: (Chapter) -> Int = { chapter ->
         when (chapter.id) {
             1 -> 3
@@ -120,11 +127,15 @@ fun ChapterSelectScreenPreview() {
             else -> 0
         }
     }
-
-    // Call the ChapterSelectScreen composable, providing mock data
+    val mockCalculateOverallStars: (List<Chapter>) -> Pair<Int, Int> = { chapters ->
+        val totalCurrent = chapters.sumOf { mockCalculateStars(it) }
+        val totalPossible = chapters.sumOf { calculateMaxPossibleStarsForChapter(it) }
+        Pair(totalCurrent, totalPossible)
+    }
     ChapterSelectScreen(
         navController = navController,
-        chapters = mockChapters, // Pass the mock chapters
-        calculateTotalStars = mockCalculateStars // Pass the mock calculation function
+        chapters = mockChapters,
+        calculateTotalStars = mockCalculateStars,
+        calculateOverallStars = mockCalculateOverallStars
     )
 }

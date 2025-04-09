@@ -1,4 +1,4 @@
-package com.example.dartadventure.screens
+package com.example.dartadventure.screens.games
 
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement

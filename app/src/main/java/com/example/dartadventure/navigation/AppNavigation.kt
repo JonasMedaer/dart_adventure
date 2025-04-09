@@ -14,11 +14,11 @@ import com.example.dartadventure.chapters
 import com.example.dartadventure.data.LevelResult
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
-import com.example.dartadventure.screens.AroundTheClockScreen
+import com.example.dartadventure.screens.games.AroundTheClockScreen
 import com.example.dartadventure.screens.Chapter1GamesList
 import com.example.dartadventure.screens.ChapterSelectScreen
 import com.example.dartadventure.screens.DartboardBackgroundWithContent
-import com.example.dartadventure.screens.LevelHighscoreScreen
+import com.example.dartadventure.screens.games.LevelHighscoreScreen
 import com.example.dartadventure.screens.SettingsScreen
 import com.example.dartadventure.utils.StorageHelper
 
