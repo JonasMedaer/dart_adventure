@@ -1,4 +1,4 @@
-package com.example.dartadventure.data
+package com.example.dartadventure.data.games
 
 abstract class GameState<T : DartThrow>( // Make GameState generic
     open val currentChapterId: Int,

@@ -2,7 +2,7 @@
 package com.example.dartadventure
 
 import com.example.dartadventure.data.Chapter
-import com.example.dartadventure.data.Game
+import com.example.dartadventure.data.games.Game
 
 val chapters = listOf(
     Chapter(

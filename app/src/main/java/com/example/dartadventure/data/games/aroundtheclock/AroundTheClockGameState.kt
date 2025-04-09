@@ -1,4 +1,7 @@
-package com.example.dartadventure.data
+package com.example.dartadventure.data.games.aroundtheclock
+
+import com.example.dartadventure.data.games.AroundTheClockDartThrow
+import com.example.dartadventure.data.games.GameState
 
 data class AroundTheClockGameState(
     override val currentChapterId: Int = 1,

@@ -25,10 +25,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.dartadventure.data.HighscoreGameState
-import com.example.dartadventure.data.calculateStars
-import com.example.dartadventure.data.getLevelResult
-import com.example.dartadventure.data.updateHighscoreGameState
+import com.example.dartadventure.data.games.calculateStars
+import com.example.dartadventure.data.games.getLevelResult
+import com.example.dartadventure.data.games.highscore.HighscoreGameState
+import com.example.dartadventure.data.highscore.updateHighscoreGameState
 import com.example.dartadventure.utils.StorageHelper
 
 @Composable

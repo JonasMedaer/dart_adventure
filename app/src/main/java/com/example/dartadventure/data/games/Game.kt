@@ -1,4 +1,4 @@
-package com.example.dartadventure.data
+package com.example.dartadventure.data.games
 
 data class Game(
     val id: Int,

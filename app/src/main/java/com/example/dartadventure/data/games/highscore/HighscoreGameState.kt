@@ -1,4 +1,7 @@
-package com.example.dartadventure.data
+package com.example.dartadventure.data.games.highscore
+
+import com.example.dartadventure.data.games.GameState
+import com.example.dartadventure.data.games.HighscoreDartThrow
 
 data class HighscoreGameState(
     override val currentChapterId: Int = 1,

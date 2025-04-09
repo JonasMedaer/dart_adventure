@@ -22,12 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.dartadventure.data.AroundTheClockDartThrow
-import com.example.dartadventure.data.AroundTheClockGameState
-import com.example.dartadventure.data.Game
 import com.example.dartadventure.data.LevelResult
-import com.example.dartadventure.data.calculateAroundTheClockScore
-import com.example.dartadventure.data.calculateStars
+import com.example.dartadventure.data.aroundtheclock.calculateAroundTheClockScore
+import com.example.dartadventure.data.games.AroundTheClockDartThrow
+import com.example.dartadventure.data.games.Game
+import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
+import com.example.dartadventure.data.games.calculateStars
 import com.example.dartadventure.utils.StorageHelper
 
 @Composable

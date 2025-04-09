@@ -1,11 +1,7 @@
-package com.example.dartadventure.data
+package com.example.dartadventure.data.games
 
 import com.example.dartadventure.chapters
-
-// Update calculateScore to handle HighscoreDartThrow
-fun calculateScore(throws: List<HighscoreDartThrow>): Int {
-    return throws.sumOf { it.score }
-}
+import com.example.dartadventure.data.LevelResult
 
 fun calculateStars(score: Int, starThresholds: List<Int>): Int {
     return when {
@@ -16,30 +12,6 @@ fun calculateStars(score: Int, starThresholds: List<Int>): Int {
         score >= starThresholds.getOrElse(0) { 100 } -> 1
         else -> 0
     }
-}
-
-fun calculateAroundTheClockScore(totalDarts: Int): Int {
-    val baseScore = 10000
-    val penaltyPerDart = 10
-    val score = (baseScore - (totalDarts * penaltyPerDart)).coerceAtLeast(0) // Ensure score >= 0
-    return score
-}
-
-fun updateHighscoreGameState(gameState: HighscoreGameState, throwScore: Int): HighscoreGameState {
-    if (gameState.throwsRemaining <= 0) {
-        return gameState
-    }
-
-    val newThrow = HighscoreDartThrow(throwScore) // Use HighscoreDartThrow
-    val updatedThrows = gameState.throws.toMutableList().apply { add(newThrow) }
-    val newScore = calculateScore(updatedThrows)
-    val remaining = gameState.throwsRemaining - 1
-
-    return gameState.copy(
-        throwsRemaining = remaining,
-        currentScore = newScore,
-        throws = updatedThrows
-    )
 }
 
 

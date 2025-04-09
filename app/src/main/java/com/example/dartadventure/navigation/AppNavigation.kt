@@ -11,9 +11,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.chapters
-import com.example.dartadventure.data.AroundTheClockGameState
-import com.example.dartadventure.data.HighscoreGameState
 import com.example.dartadventure.data.LevelResult
+import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
+import com.example.dartadventure.data.games.highscore.HighscoreGameState
 import com.example.dartadventure.screens.AroundTheClockScreen
 import com.example.dartadventure.screens.Chapter1GamesList
 import com.example.dartadventure.screens.ChapterSelectScreen
