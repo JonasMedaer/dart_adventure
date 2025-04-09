@@ -30,6 +30,7 @@ import com.example.dartadventure.data.aroundtheclock.updateAroundTheClockGameSta
 import com.example.dartadventure.data.games.Game
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.calculateStars
+import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.MockStorageHelper
 import com.example.dartadventure.utils.StorageHelper
 import com.example.dartadventure.utils.StorageInterface
@@ -146,27 +147,29 @@ fun AroundTheClockScreen(
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
 fun AroundTheClockScreenPreview() {
-    val navController = rememberNavController()
-    val mockGameState = remember { mutableStateOf(AroundTheClockGameState()) }
-    val mockGetGameData: (Int) -> Game? = remember {
-        { gameId ->
-            Game(
-                id = gameId,
-                name = "Mock Game",
-                description = "This is a mock game for preview.",
-                starThresholds = listOf(100, 200, 300, 400, 500),
-                initialThrows = null
-            )
+        val navController = rememberNavController()
+        val mockGameState = remember { mutableStateOf(AroundTheClockGameState()) }
+        val mockGetGameData: (Int) -> Game? = remember {
+            { gameId ->
+                Game(
+                    id = gameId,
+                    name = "Mock Game",
+                    description = "This is a mock game for preview.",
+                    starThresholds = listOf(100, 200, 300, 400, 500),
+                    initialThrows = null
+                )
+            }
         }
+
+        MockStorageHelper.initialize()
+        val mockStorageHelper: StorageInterface = MockStorageHelper
+
+    DartAdventureTheme {
+        AroundTheClockScreen(
+            navController = navController,
+            gameState = mockGameState,
+            getGameData = mockGetGameData,
+            storageHelper = mockStorageHelper // Pass the mock instance
+        )
     }
-
-    MockStorageHelper.initialize()
-    val mockStorageHelper: StorageInterface = MockStorageHelper
-
-    AroundTheClockScreen(
-        navController = navController,
-        gameState = mockGameState,
-        getGameData = mockGetGameData,
-        storageHelper = mockStorageHelper // Pass the mock instance
-    )
 }

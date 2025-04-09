@@ -2,8 +2,6 @@ package com.example.dartadventure.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -20,8 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -50,11 +44,9 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
-        // Use Box to position elements independently
         Box(
-            modifier = Modifier.fillMaxSize(), // Make the Box fill the entire screen
+            modifier = Modifier.fillMaxSize(),
         ) {
-            // Top-centered Text
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -64,13 +56,11 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                 Text(
                     text = "Dart Adventure",
                     style = MaterialTheme.typography.displayLarge.copy(
-                        // Use a new style
-                        color = MaterialTheme.colorScheme.surface, // Changed color here
+                        color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                     )
                 )
             }
-            // Bottom-centered Button
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -79,29 +69,10 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     .offset(y = -70.dp)
             ) {
                 Spacer(modifier = Modifier.height(100.dp))
+
                 Button(
                     onClick = { navController.navigate("chapter_select") },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.Transparent,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    modifier = Modifier
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    MaterialTheme.colorScheme.secondary,
-                                    MaterialTheme.colorScheme.primary
-                                )
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(2.dp)
-                        .border(
-                            width = 2.dp,
-                            color = MaterialTheme.colorScheme.secondary,
-                            shape = RoundedCornerShape(8.dp)
-                        ),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(
                         "Start Game",
@@ -114,7 +85,7 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     Text(
                         "Settings",
                         style = MaterialTheme.typography.labelLarge
-                    ) // Use an existing style
+                    )
                 }
             }
         }
@@ -126,8 +97,8 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
 fun DartboardPreview() {
+    val navController = rememberNavController()
     DartAdventureTheme {
-        val navController = rememberNavController() // Create a NavController for the preview
         DartboardBackgroundWithContent(navController = navController)
     }
 }

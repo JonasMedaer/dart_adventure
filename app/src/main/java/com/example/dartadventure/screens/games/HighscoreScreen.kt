@@ -37,6 +37,7 @@ import com.example.dartadventure.data.games.calculateStars
 import com.example.dartadventure.data.games.getLevelResult
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
 import com.example.dartadventure.data.highscore.updateHighscoreGameState
+import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.StorageHelper
 
 @Composable
@@ -131,13 +132,15 @@ class NumberOffsetMapping(private val length: Int) : OffsetMapping {
 @Preview(name = "Tablet", device = Devices.PIXEL_C)
 @Composable
 fun LevelHighscorePreview() {
-    val navController = rememberNavController()
-    val mockGameState = remember { mutableStateOf(HighscoreGameState(throwsRemaining = 5)) }
-    val mockStarThresholds = listOf(100, 150, 200, 250, 300)
+        val navController = rememberNavController()
+        val mockGameState = remember { mutableStateOf(HighscoreGameState(throwsRemaining = 5)) }
+        val mockStarThresholds = listOf(100, 150, 200, 250, 300)
 
-    HighscoreScreen(
-        navController = navController,
-        gameState = mockGameState,
-        starThresholds = mockStarThresholds
-    )
+    DartAdventureTheme {
+        HighscoreScreen(
+            navController = navController,
+            gameState = mockGameState,
+            starThresholds = mockStarThresholds
+        )
+    }
 }

@@ -47,11 +47,11 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            DartAdventureTheme {
+            DartAdventureTheme() {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation(
                         modifier = Modifier.padding(innerPadding),
-                        storageHelper = storageHelper // Pass the storageHelper here
+                        storageHelper = storageHelper
                     )
                 }
             }

@@ -92,7 +92,7 @@ fun clearAllScores() {
 @Composable
 fun SettingsScreenPreview() {
     val navController = rememberNavController()
-    DartAdventureTheme { // Wrap the preview with your theme
+    DartAdventureTheme {
         SettingsScreen(navController = navController)
     }
 }

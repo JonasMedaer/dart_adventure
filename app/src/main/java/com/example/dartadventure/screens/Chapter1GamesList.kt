@@ -100,7 +100,7 @@ fun Chapter1GamesListPreview() {
         Pair(1, 1) to LevelResult(chapter = 1, game = 1, score = 150, stars = 3),
         Pair(1, 2) to LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
     )
-    DartAdventureTheme { // Wrap the preview in your theme
+    DartAdventureTheme {
         Chapter1GamesList(
             navController = navController,
             chapter = mockChapter,

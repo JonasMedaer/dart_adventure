@@ -135,7 +135,7 @@ fun ChapterSelectScreenPreview() {
         val totalPossible = chapters.sumOf { calculateMaxPossibleStarsForChapter(it) }
         Pair(totalCurrent, totalPossible)
     }
-    DartAdventureTheme { // Wrap the preview with your theme
+    DartAdventureTheme {
         ChapterSelectScreen(
             navController = navController,
             chapters = mockChapters,
