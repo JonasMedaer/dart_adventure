@@ -10,6 +10,9 @@ data class AroundTheClockGameState(
     val currentTarget: Int = 1,
     val dartsThrown: Int = 0,
     val totalDartsUsed: Int = 0,
+    val mustEndOnBullseye: Boolean = false,
+    val gameFinished: Boolean = false,
+    val initialized: Boolean = false,
     override val throws: MutableList<AroundTheClockDartThrow> = mutableListOf()
 ) : GameState<AroundTheClockDartThrow>( // Specify AroundTheClockDartThrow
     currentChapterId,

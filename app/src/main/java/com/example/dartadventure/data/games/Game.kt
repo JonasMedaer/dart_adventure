@@ -7,5 +7,6 @@ data class Game(
     val highscore: Int = 0,
     val stars: Int = 0,
     val starThresholds: List<Int>,
-    val initialThrows: Int? = null
+    val initialThrows: Int? = null,
+    val mustEndOnBullseye: Boolean = false // only needed for around the clock, will refactor later
 )

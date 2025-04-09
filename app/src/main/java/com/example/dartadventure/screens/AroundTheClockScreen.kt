@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,7 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.data.LevelResult
 import com.example.dartadventure.data.aroundtheclock.calculateAroundTheClockScore
-import com.example.dartadventure.data.games.AroundTheClockDartThrow
+import com.example.dartadventure.data.aroundtheclock.updateAroundTheClockGameState
 import com.example.dartadventure.data.games.Game
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.calculateStars
@@ -36,8 +37,6 @@ fun AroundTheClockScreen(
     gameState: MutableState<AroundTheClockGameState>,
     getGameData: (Int) -> Game?
 ) {
-    // Remove the local gameState variable
-    // var gameState by remember { gameState } // This is the problem!
     var dartsThisTurn by remember { mutableStateOf(0) }
     val levelResult = StorageHelper.getLevelResult(
         gameState.value.currentChapterId,
@@ -50,7 +49,16 @@ fun AroundTheClockScreen(
             levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
         )
     }
-
+    // Initialize mustEndOnBullseye once when the screen is composed
+    LaunchedEffect(Unit) {
+        if (!gameState.value.initialized) {
+            val mustEndOnBullseye = game?.mustEndOnBullseye ?: false
+            gameState.value = gameState.value.copy(
+                mustEndOnBullseye = mustEndOnBullseye,
+                initialized = true
+            )
+        }
+    }
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -58,28 +66,21 @@ fun AroundTheClockScreen(
     ) {
         Text("Around the Clock")
         Spacer(modifier = Modifier.height(16.dp))
-
         Text("Target: ${gameState.value.currentTarget}")
         Text("Total Darts Used: ${gameState.value.totalDartsUsed}")
-        Text("Current Stars: $currentStars") // does not change yet
+        Text("Current Stars: $currentStars")
         Text("Score: ${gameState.value.currentScore}")
-
         Spacer(modifier = Modifier.height(24.dp))
-
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Button(
                 onClick = {
                     if (dartsThisTurn < 3) {
                         dartsThisTurn++
-                        gameState.value = gameState.value.copy(
-                            totalDartsUsed = gameState.value.totalDartsUsed + 1,
-                            currentScore = calculateAroundTheClockScore(gameState.value.totalDartsUsed + 1),
-                            currentTarget = if (gameState.value.currentTarget == 20) 25 else gameState.value.currentTarget + 1,
-                            throws = gameState.value.throws.toMutableList().apply {
-                                add(AroundTheClockDartThrow(gameState.value.currentTarget, true))
-                            }
+                        gameState.value = updateAroundTheClockGameState(
+                            gameState.value,
+                            true
                         )
-                        if (gameState.value.currentTarget == 25) {
+                        if (gameState.value.gameFinished) {
                             val finalScore =
                                 calculateAroundTheClockScore(gameState.value.totalDartsUsed)
                             val game = getGameData(gameState.value.currentGameId)
@@ -97,44 +98,31 @@ fun AroundTheClockScreen(
                                 "AroundTheClock",
                                 "Saving LevelResult with chapterId: ${gameState.value.currentChapterId}, gameId: ${gameState.value.currentGameId}"
                             )
-                            StorageHelper.saveLevelResult(levelResult) // Save the result
+                            StorageHelper.saveLevelResult(levelResult)
                             navController.popBackStack()
                         }
                     }
                     if (dartsThisTurn == 3) {
                         dartsThisTurn = 0
                     }
-
-                    // Update currentStars based on darts used and targets hit
                     currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
                 enabled = dartsThisTurn < 3
             ) {
                 Text("Hit")
             }
-
             Button(
                 onClick = {
                     if (dartsThisTurn < 3) {
                         dartsThisTurn++
-                        gameState.value = gameState.value.copy( // Update using gameState.value
-                            totalDartsUsed = gameState.value.totalDartsUsed + 1,
-                            currentScore = calculateAroundTheClockScore(gameState.value.totalDartsUsed + 1),
-                            throws = gameState.value.throws.toMutableList()
-                                .apply {
-                                    add(
-                                        AroundTheClockDartThrow(
-                                            gameState.value.currentTarget,
-                                            false
-                                        )
-                                    )
-                                }
+                        gameState.value = updateAroundTheClockGameState(
+                            gameState.value,
+                            false
                         )
                     }
                     if (dartsThisTurn == 3) {
                         dartsThisTurn = 0
                     }
-                    // Update currentStars based on darts used and targets hit
                     currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
                 enabled = dartsThisTurn < 3

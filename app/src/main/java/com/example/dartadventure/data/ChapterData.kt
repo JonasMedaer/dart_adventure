@@ -28,6 +28,7 @@ val chapters = listOf(
                     10000 - (20 * 25), //9500
                     10000 - (20 * 20) //9600
                 ),
+                mustEndOnBullseye = false
             )
         ),
         requiredStars = 5,
