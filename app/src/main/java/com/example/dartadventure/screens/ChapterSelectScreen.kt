@@ -1,3 +1,4 @@
+// ChapterSelectScreen.kt
 package com.example.dartadventure.screens
 
 import android.content.res.Configuration
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,6 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
 import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
+import com.example.dartadventure.ui.theme.DartAdventureTheme // Import your theme
 import com.example.dartadventure.utils.StorageHelper
 import com.example.dartadventure.utils.StorageHelper.calculateMaxPossibleStarsForChapter
 
@@ -70,8 +73,8 @@ fun ChapterSelectScreen(
         )
         Column(modifier = Modifier.padding(16.dp)) {
             Spacer(modifier = Modifier.height(32.dp))
-            Text("Select a Chapter")
-            Text("Total Stars: $overallCurrentStars / $overallPossibleStars")
+            Text("Select a Chapter", style = MaterialTheme.typography.headlineLarge) // Updated style
+            Text("Total Stars: $overallCurrentStars / $overallPossibleStars", style = MaterialTheme.typography.bodyLarge) // Updated style
             Spacer(modifier = Modifier.height(16.dp))
             LazyColumn {
                 items(chapters) { chapter ->
@@ -82,7 +85,7 @@ fun ChapterSelectScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(chapter.name)
+                            Text(chapter.name, style = MaterialTheme.typography.headlineSmall) // Updated style
                             val totalStars = calculateTotalStars(chapter)
                             val maxPossibleStars = calculateMaxPossibleStarsForChapter(chapter)
                             val displayText = if (isUnlocked) {
@@ -91,7 +94,7 @@ fun ChapterSelectScreen(
                                 val requiredStars = unlockThresholds[chapter.id] ?: 0
                                 "Total Stars: $totalStars / $maxPossibleStars (Requires $requiredStars overall)"
                             }
-                            Text(displayText)
+                            Text(displayText, style = MaterialTheme.typography.bodyLarge) // Updated style
                         }
                         Button(
                             onClick = {
@@ -99,7 +102,7 @@ fun ChapterSelectScreen(
                             },
                             enabled = isUnlocked
                         ) {
-                            Text(if (isUnlocked) "Select" else "Locked")
+                            Text(if (isUnlocked) "Select" else "Locked", style = MaterialTheme.typography.labelLarge) // Updated style
                         }
                     }
                 }
@@ -132,10 +135,12 @@ fun ChapterSelectScreenPreview() {
         val totalPossible = chapters.sumOf { calculateMaxPossibleStarsForChapter(it) }
         Pair(totalCurrent, totalPossible)
     }
-    ChapterSelectScreen(
-        navController = navController,
-        chapters = mockChapters,
-        calculateTotalStars = mockCalculateStars,
-        calculateOverallStars = mockCalculateOverallStars
-    )
+    DartAdventureTheme { // Wrap the preview with your theme
+        ChapterSelectScreen(
+            navController = navController,
+            chapters = mockChapters,
+            calculateTotalStars = mockCalculateStars,
+            calculateOverallStars = mockCalculateOverallStars
+        )
+    }
 }

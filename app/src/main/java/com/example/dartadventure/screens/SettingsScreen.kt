@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -17,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.StorageHelper
 
 @Composable
@@ -28,7 +30,7 @@ fun SettingsScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Settings")
+        Text("Settings", style = MaterialTheme.typography.headlineLarge) // Updated style
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
@@ -36,7 +38,7 @@ fun SettingsScreen(navController: NavController) {
                 showDialog.value = true
             }
         ) {
-            Text("Clear All Scores")
+            Text("Clear All Scores", style = MaterialTheme.typography.labelLarge) // Updated style
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -46,15 +48,15 @@ fun SettingsScreen(navController: NavController) {
                 navController.popBackStack() // Navigate back
             }
         ) {
-            Text("Back")
+            Text("Back", style = MaterialTheme.typography.labelLarge) // Updated style
         }
     }
 
     if (showDialog.value) {
         AlertDialog(
             onDismissRequest = { showDialog.value = false },
-            title = { Text("Confirm Clear Scores") },
-            text = { Text("Are you sure you want to clear all saved scores?") },
+            title = { Text("Confirm Clear Scores", style = MaterialTheme.typography.headlineSmall) }, // Updated style
+            text = { Text("Are you sure you want to clear all saved scores?", style = MaterialTheme.typography.bodyLarge) }, // Updated style
             confirmButton = {
                 Button(
                     onClick = {
@@ -63,12 +65,12 @@ fun SettingsScreen(navController: NavController) {
                         // Optionally, show a confirmation message (e.g., a Snackbar)
                     }
                 ) {
-                    Text("Clear")
+                    Text("Clear", style = MaterialTheme.typography.labelLarge) // Updated style
                 }
             },
             dismissButton = {
                 Button(onClick = { showDialog.value = false }) {
-                    Text("Cancel")
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge) // Updated style
                 }
             }
         )
@@ -90,5 +92,7 @@ fun clearAllScores() {
 @Composable
 fun SettingsScreenPreview() {
     val navController = rememberNavController()
-    SettingsScreen(navController = navController)
+    DartAdventureTheme { // Wrap the preview with your theme
+        SettingsScreen(navController = navController)
+    }
 }

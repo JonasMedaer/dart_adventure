@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import com.example.dartadventure.R
 import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.data.LevelResult
+import com.example.dartadventure.ui.theme.DartAdventureTheme // Import your theme
 
 @Composable
 fun Chapter1GamesList(
@@ -56,7 +58,7 @@ fun Chapter1GamesList(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Chapter: ${chapter.name}")
+            Text("Chapter: ${chapter.name}", style = MaterialTheme.typography.headlineLarge) // Apply headlineLarge
             Spacer(modifier = Modifier.height(24.dp))
             chapter.games.forEach { game ->
                 val gameResult = getLevelResult(chapter.id, game.id)
@@ -68,9 +70,9 @@ fun Chapter1GamesList(
                         2 -> navController.navigate("around_the_clock/${chapter.id}")
                     }
                 }) {
-                    Text(game.name)
+                    Text(game.name, style = MaterialTheme.typography.labelLarge) // Apply labelLarge to button text
                 }
-                Text("Highscore: $gameHighscore, Stars: $gameStars")
+                Text("Highscore: $gameHighscore, Stars: $gameStars", style = MaterialTheme.typography.bodyLarge) // Apply bodyLarge
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -85,7 +87,7 @@ fun Chapter1GamesListPreview() {
     val navController = rememberNavController()
     val mockChapter = Chapter(
         id = 1,
-        name = "Chapter 1",
+        name = "The beginning",
         description = "First Chapter",
         games = listOf(
             createMockGame(id = 1, name = "Game 1", description = "First Game"),
@@ -98,9 +100,11 @@ fun Chapter1GamesListPreview() {
         Pair(1, 1) to LevelResult(chapter = 1, game = 1, score = 150, stars = 3),
         Pair(1, 2) to LevelResult(chapter = 1, game = 2, score = 200, stars = 4)
     )
-    Chapter1GamesList(
-        navController = navController,
-        chapter = mockChapter,
-        getLevelResult = { chapterId, gameId -> mockLevelResults[Pair(chapterId, gameId)] }
-    )
+    DartAdventureTheme { // Wrap the preview in your theme
+        Chapter1GamesList(
+            navController = navController,
+            chapter = mockChapter,
+            getLevelResult = { chapterId, gameId -> mockLevelResults[Pair(chapterId, gameId)] }
+        )
+    }
 }
