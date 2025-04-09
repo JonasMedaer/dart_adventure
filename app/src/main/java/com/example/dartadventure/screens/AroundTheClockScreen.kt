@@ -39,6 +39,17 @@ fun AroundTheClockScreen(
     // Remove the local gameState variable
     // var gameState by remember { gameState } // This is the problem!
     var dartsThisTurn by remember { mutableStateOf(0) }
+    val levelResult = StorageHelper.getLevelResult(
+        gameState.value.currentChapterId,
+        gameState.value.currentGameId
+    )
+    val game = getGameData(gameState.value.currentGameId)
+    val starThresholds = game?.starThresholds ?: emptyList()
+    var currentStars by remember {
+        mutableStateOf(
+            levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -50,6 +61,7 @@ fun AroundTheClockScreen(
 
         Text("Target: ${gameState.value.currentTarget}")
         Text("Total Darts Used: ${gameState.value.totalDartsUsed}")
+        Text("Current Stars: $currentStars") // does not change yet
         Text("Score: ${gameState.value.currentScore}")
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -92,6 +104,9 @@ fun AroundTheClockScreen(
                     if (dartsThisTurn == 3) {
                         dartsThisTurn = 0
                     }
+
+                    // Update currentStars based on darts used and targets hit
+                    currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
                 enabled = dartsThisTurn < 3
             ) {
@@ -119,6 +134,8 @@ fun AroundTheClockScreen(
                     if (dartsThisTurn == 3) {
                         dartsThisTurn = 0
                     }
+                    // Update currentStars based on darts used and targets hit
+                    currentStars = calculateStars(gameState.value.currentScore, starThresholds)
                 },
                 enabled = dartsThisTurn < 3
             ) {

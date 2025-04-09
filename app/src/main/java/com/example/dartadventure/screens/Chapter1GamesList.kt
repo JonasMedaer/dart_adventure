@@ -1,7 +1,6 @@
 // Chapter1GamesList.kt
 package com.example.dartadventure.screens
 
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -32,9 +26,6 @@ import com.example.dartadventure.R
 import com.example.dartadventure.createMockGame
 import com.example.dartadventure.data.Chapter
 import com.example.dartadventure.data.LevelResult
-import com.example.dartadventure.utils.StorageHelper
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.isActive
 
 @Composable
 fun Chapter1GamesList(
@@ -50,26 +41,6 @@ fun Chapter1GamesList(
         R.drawable.levelselect_path_tablet
     } else {
         R.drawable.levelselect_path
-    }
-
-    var levelResultChanged by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) { // Use Unit as the key to launch only once
-        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-            if (key?.startsWith("level_result_") == true) {
-                levelResultChanged = !levelResultChanged
-            }
-        }
-        val sharedPreferences = StorageHelper.getSharedPreferences()
-        try {
-            sharedPreferences.registerOnSharedPreferenceChangeListener(listener)
-            while (currentCoroutineContext().isActive) {
-                // Keep the coroutine active to listen for changes
-                kotlinx.coroutines.delay(100) // Small delay to avoid busy-waiting
-            }
-        } finally {
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(listener)
-        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
