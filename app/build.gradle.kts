@@ -53,7 +53,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.gson)
     implementation(libs.androidx.appcompat)
-
+    implementation(libs.androidx.core.splashscreen)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

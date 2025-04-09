@@ -12,6 +12,7 @@ navigationRuntimeAndroid = "2.9.0-alpha09"
 navigationCompose = "2.8.9"
 gson = "2.10.1"
 appcompat = "1.7.0"
+splashscreen = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -32,9 +33,9 @@ androidx-navigation-runtime-android = { group = "androidx.navigation", name = "n
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" } # Add this line
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-

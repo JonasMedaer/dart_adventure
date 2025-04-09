@@ -49,20 +49,6 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = 320.dp)
-            ) {
-                Text(
-                    text = "Dart Adventure",
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        color = MaterialTheme.colorScheme.onBackground,
-                        textAlign = TextAlign.Center,
-                    )
-                )
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
