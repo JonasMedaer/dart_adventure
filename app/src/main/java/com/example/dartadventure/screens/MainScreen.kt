@@ -65,7 +65,7 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     text = "Dart Adventure",
                     style = MaterialTheme.typography.displayLarge.copy(
                         // Use a new style
-                        color = Color.DarkGray,
+                        color = MaterialTheme.colorScheme.surface, // Changed color here
                         textAlign = TextAlign.Center,
                     )
                 )
@@ -83,15 +83,15 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     onClick = { navController.navigate("chapter_select") },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Transparent,
-                        contentColor = Color.White
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     modifier = Modifier
                         .background(
                             brush = Brush.linearGradient(
                                 colors = listOf(
-                                    Color(0xFF4CAF50),
-                                    Color(0xFF1B5E20),
-                                    Color(0xFF4CAF50)
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary,
+                                    MaterialTheme.colorScheme.primary
                                 )
                             ),
                             shape = RoundedCornerShape(8.dp)
@@ -99,13 +99,13 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                         .padding(2.dp)
                         .border(
                             width = 2.dp,
-                            color = Color.Transparent,
+                            color = MaterialTheme.colorScheme.secondary,
                             shape = RoundedCornerShape(8.dp)
                         ),
                 ) {
                     Text(
                         "Start Game",
-                        style = MaterialTheme.typography.headlineLarge // Use a new style
+                        style = MaterialTheme.typography.headlineLarge
                     )
                 }
                 Button(onClick = {
