@@ -7,12 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,9 +30,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
@@ -66,7 +68,8 @@ fun AroundTheClockScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val backgroundImage =
-        if (isLandscape) R.drawable.castle else R.drawable.castle // Replace with your tablet image
+        if (isLandscape) R.drawable.castle_tablet else R.drawable.castle
+    var showExitDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(game) {
         if (!gameState.value.initialized) {
@@ -88,89 +91,170 @@ fun AroundTheClockScreen(
             contentScale = ContentScale.Crop
         )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black.copy(alpha = 0.6f))
-                .padding(32.dp)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .fillMaxHeight(0.8f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text("Around the Clock", style = MaterialTheme.typography.headlineSmall, color = Color.White)
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Target: ${gameState.value.currentTarget}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text(
-                    "Total Darts Used: ${gameState.value.totalDartsUsed}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White
-                )
-                Text("Current Stars: $currentStars", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text("Score: ${gameState.value.currentScore}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = {
-                            if (dartsThisTurn < 3) {
-                                dartsThisTurn++
-                                gameState.value = updateAroundTheClockGameState(
-                                    gameState.value,
-                                    true
-                                )
-                                if (gameState.value.gameFinished) {
-                                    val finalScore =
-                                        calculateAroundTheClockScore(gameState.value.totalDartsUsed)
-                                    val currentGame = getGameData(gameState.value.currentGameId)
-                                    val stars = if (currentGame != null) calculateStars(
-                                        finalScore,
-                                        currentGame.starThresholds
-                                    ) else 0
-                                    val newLevelResult = LevelResult(
-                                        chapter = gameState.value.currentChapterId,
-                                        game = gameState.value.currentGameId,
-                                        score = finalScore,
-                                        stars = stars
-                                    )
-                                    storageHelper.saveLevelResult(newLevelResult)
-                                    navController.popBackStack()
-                                }
-                            }
-                            if (dartsThisTurn == 3) {
-                                dartsThisTurn = 0
-                            }
-                            currentStars = calculateStars(gameState.value.currentScore, starThresholds)
-                        },
-                        enabled = dartsThisTurn < 3,
-                        modifier = Modifier.width(120.dp)
+                Column(
+                    modifier = Modifier.fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Around the Clock",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.secondary,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 64.dp, vertical = 32.dp)
+
                     ) {
-                        Text("Hit", style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            "${gameState.value.currentTarget}",
+                            style = TextStyle(
+                                fontSize = 84.sp,
+                                color = MaterialTheme.colorScheme.onSecondary
+                            ),
+                        )
                     }
-                    Button(
-                        onClick = {
-                            if (dartsThisTurn < 3) {
-                                dartsThisTurn++
-                                gameState.value = updateAroundTheClockGameState(
-                                    gameState.value,
-                                    false
-                                )
-                            }
-                            if (dartsThisTurn == 3) {
-                                dartsThisTurn = 0
-                            }
-                            currentStars = calculateStars(gameState.value.currentScore, starThresholds)
-                        },
-                        enabled = dartsThisTurn < 3,
-                        modifier = Modifier.width(120.dp)
+                    Text(
+                        "Total Darts Used: ${gameState.value.totalDartsUsed}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        "Current Stars: $currentStars",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        "Score: ${gameState.value.currentScore}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Miss", style = MaterialTheme.typography.labelLarge)
+                        Button(
+                            onClick = {
+                                if (dartsThisTurn < 3) {
+                                    dartsThisTurn++
+                                    gameState.value = updateAroundTheClockGameState(
+                                        gameState.value,
+                                        true
+                                    )
+                                    if (gameState.value.gameFinished) {
+                                        val finalScore =
+                                            calculateAroundTheClockScore(gameState.value.totalDartsUsed)
+                                        val currentGame = getGameData(gameState.value.currentGameId)
+                                        val stars = if (currentGame != null) calculateStars(
+                                            finalScore,
+                                            currentGame.starThresholds
+                                        ) else 0
+                                        val newLevelResult = LevelResult(
+                                            chapter = gameState.value.currentChapterId,
+                                            game = gameState.value.currentGameId,
+                                            score = finalScore,
+                                            stars = stars
+                                        )
+                                        storageHelper.saveLevelResult(newLevelResult)
+                                        navController.popBackStack()
+                                    }
+                                }
+                                if (dartsThisTurn == 3) {
+                                    dartsThisTurn = 0
+                                }
+                                currentStars =
+                                    calculateStars(gameState.value.currentScore, starThresholds)
+                            },
+                            enabled = dartsThisTurn < 3,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(0.3f)
+                                .fillMaxWidth(0.3f)
+                        ) {
+                            Text("Hit", style = MaterialTheme.typography.labelLarge)
+                        }
+                        Button(
+                            onClick = {
+                                if (dartsThisTurn < 3) {
+                                    dartsThisTurn++
+                                    gameState.value = updateAroundTheClockGameState(
+                                        gameState.value,
+                                        false
+                                    )
+                                }
+                                if (dartsThisTurn == 3) {
+                                    dartsThisTurn = 0
+                                }
+                                currentStars =
+                                    calculateStars(gameState.value.currentScore, starThresholds)
+                            },
+                            enabled = dartsThisTurn < 3,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(0.3f)
+                                .fillMaxWidth(0.3f)
+                        ) {
+                            Text(
+                                "Miss",
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
                 }
             }
+            Button(onClick = { showExitDialog = true }) {
+                Text("Back", style = MaterialTheme.typography.labelLarge)
+            }
         }
     }
+
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("Confirm Exit", style = MaterialTheme.typography.headlineSmall) },
+            text = {
+                Text(
+                    "Are you sure you want to exit? Your progress will be saved.",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Exit", style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showExitDialog = false }) {
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        )
+    }
 }
+
 
 @Preview(showBackground = true)
 @Preview(name = "Pixel 7 pro", device = Devices.PIXEL_7_PRO)

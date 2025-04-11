@@ -7,7 +7,7 @@ import com.example.dartadventure.data.games.Game
 val chapters = listOf(
     Chapter(
         id = 1,
-        name = "The Beginning",
+        name = "The beginning",
         description = "Learn the basics of dart throwing.",
         games = listOf(
             Game(
@@ -36,7 +36,7 @@ val chapters = listOf(
     ),
     Chapter(
         id = 2,
-        name = "The Journey Continues",
+        name = "The forest",
         description = "Test your skills with more challenging games.",
         games = listOf(
             Game(

@@ -7,13 +7,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -62,7 +64,8 @@ fun HighscoreScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val backgroundImage =
-        if (isLandscape) R.drawable.highscore_game_tablet else R.drawable.highscore_game // Replace with your tablet image
+        if (isLandscape) R.drawable.highscore_game_tablet else R.drawable.highscore_game
+    var showExitDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(gameState.value.currentScore) {
         currentStars = calculateStars(gameState.value.currentScore, starThresholds)
@@ -76,79 +79,139 @@ fun HighscoreScreen(
             contentScale = ContentScale.Crop
         )
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black.copy(alpha = 0.6f))
-                .padding(32.dp)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .fillMaxHeight(0.8f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.Black.copy(alpha = 0.4f))
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center // Add this line
             ) {
-                Text("Highscore", style = MaterialTheme.typography.headlineSmall, color = Color.White)
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text("Score: ${gameState.value.currentScore}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text("Stars: $currentStars", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-                Text("Throws Remaining: ${gameState.value.throwsRemaining}", style = MaterialTheme.typography.bodyLarge, color = Color.White)
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                OutlinedTextField(
-                    value = throwScoreInput,
-                    onValueChange = {
-                        val filteredInput = it.filter { char -> char.isDigit() }
-                        throwScoreInput = filteredInput
-                        isInputValid = filteredInput.toIntOrNull() != null && filteredInput.toInt() >= 0 && filteredInput.toInt() <= 180
-                    },
-                    label = { Text("Score (3 Darts)", style = MaterialTheme.typography.labelLarge, color = Color.White) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    visualTransformation = NumberInputTransformation(),
-                    isError = !isInputValid,
-                    modifier = Modifier.width(280.dp)
-                )
-                if (!isInputValid && throwScoreInput.isNotEmpty()) {
-                    Text(
-                        "Invalid score.",
-                        color = androidx.compose.ui.graphics.Color.Red
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = {
-                        val throwScore = throwScoreInput.toIntOrNull()
-                        if (throwScore != null && throwScore >= 0) {
-                            gameState.value = updateHighscoreGameState(gameState.value, throwScore)
-                            throwScoreInput = ""
-
-                            if (gameState.value.throwsRemaining <= 0) {
-                                val levelResult = getLevelResult(gameState.value)
-                                StorageHelper.saveLevelResult(levelResult)
-                                navController.popBackStack()
-                            }
-                        }
-                    },
-                    enabled = gameState.value.throwsRemaining > 0 && isInputValid,
-                    modifier = Modifier
-                        .width(200.dp)
-                        .height(60.dp),
-                    contentPadding = PaddingValues(16.dp)
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Thrown (3 darts)", style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        "Highscore",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    )
+
+                    Text(
+                        "Score: ${gameState.value.currentScore}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        "Stars: $currentStars",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+                    Text(
+                        "Throws Remaining: ${gameState.value.throwsRemaining}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = Color.White
+                    )
+
+                    OutlinedTextField(
+                        value = throwScoreInput,
+                        onValueChange = {
+                            val filteredInput = it.filter { char -> char.isDigit() }
+                            throwScoreInput = filteredInput
+                            isInputValid =
+                                filteredInput.toIntOrNull() != null && filteredInput.toInt() >= 0 && filteredInput.toInt() <= 180
+                        },
+                        label = {
+                            Text(
+                                "Score (3 Darts)",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = Color.White
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        visualTransformation = NumberInputTransformation(),
+                        isError = !isInputValid,
+                        modifier = Modifier.width(280.dp)
+                    )
+                    if (!isInputValid && throwScoreInput.isNotEmpty()) {
+                        Text(
+                            "Invalid score.",
+                            color = androidx.compose.ui.graphics.Color.Red
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            val throwScore = throwScoreInput.toIntOrNull()
+                            if (throwScore != null && throwScore >= 0) {
+                                gameState.value =
+                                    updateHighscoreGameState(gameState.value, throwScore)
+                                throwScoreInput = ""
+
+                                if (gameState.value.throwsRemaining <= 0) {
+                                    val levelResult = getLevelResult(gameState.value)
+                                    StorageHelper.saveLevelResult(levelResult)
+                                    navController.popBackStack()
+                                }
+                            }
+                        },
+                        enabled = gameState.value.throwsRemaining > 0 && isInputValid,
+                        modifier = Modifier
+                            .width(200.dp)
+                            .height(60.dp),
+                        contentPadding = PaddingValues(16.dp)
+                    ) {
+                        Text("Thrown (3 darts)", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
+            Button(onClick = { showExitDialog = true }) {
+                Text("Back", style = MaterialTheme.typography.labelLarge)
+            }
         }
+    }
+    if (showExitDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { Text("Confirm Exit", style = MaterialTheme.typography.headlineSmall) },
+            text = {
+                Text(
+                    "Are you sure you want to exit? Your progress will be saved.",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitDialog = false
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Exit", style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showExitDialog = false }) {
+                    Text("Cancel", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        )
     }
 }
 
 class NumberInputTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
         val filteredText = text.text.filter { it.isDigit() }
-        return TransformedText(AnnotatedString(filteredText), NumberOffsetMapping(filteredText.length))
+        return TransformedText(
+            AnnotatedString(filteredText),
+            NumberOffsetMapping(filteredText.length)
+        )
     }
 }
 
