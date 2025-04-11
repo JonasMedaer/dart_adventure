@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,7 +45,13 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
         )
         Box(
             modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center // Added to center the text
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.menu_text_transparant),
+                contentDescription = "Menu Text",
+                modifier = Modifier.align(Alignment.Center) // Align to center
+            )
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -54,7 +59,7 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                     .align(Alignment.BottomCenter)
                     .offset(y = -70.dp)
             ) {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(150.dp)) // Increased spacing
 
                 Button(
                     onClick = { navController.navigate("chapter_select") },
@@ -65,6 +70,7 @@ fun DartboardBackgroundWithContent(navController: NavController, modifier: Modif
                         style = MaterialTheme.typography.headlineLarge
                     )
                 }
+                Spacer(modifier = Modifier.height(32.dp)) // Added spacing between buttons
                 Button(onClick = {
                     navController.navigate("settings")
                 }) {
