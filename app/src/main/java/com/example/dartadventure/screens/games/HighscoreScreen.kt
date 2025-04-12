@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
+import com.example.dartadventure.data.games.HighscoreDartThrow
 import com.example.dartadventure.data.games.calculateStars
 import com.example.dartadventure.data.games.getLevelResult
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
@@ -66,9 +69,18 @@ fun HighscoreScreen(
     val backgroundImage =
         if (isLandscape) R.drawable.highscore_game_tablet else R.drawable.highscore_game
     var showExitDialog by remember { mutableStateOf(false) }
+    var lastThrow by remember { mutableStateOf<HighscoreDartThrow?>(null) }
+    var canRedo by remember { mutableStateOf(false) }
+    var showGameOverDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(gameState.value.currentScore) {
         currentStars = calculateStars(gameState.value.currentScore, starThresholds)
+    }
+
+    LaunchedEffect(gameState.value.throwsRemaining) {
+        if (gameState.value.throwsRemaining <= 0) {
+            showGameOverDialog = true
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -91,7 +103,7 @@ fun HighscoreScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color.Black.copy(alpha = 0.4f))
                     .padding(32.dp),
-                contentAlignment = Alignment.Center // Add this line
+                contentAlignment = Alignment.Center
             ) {
                 Column(
                     verticalArrangement = Arrangement.Center,
@@ -118,6 +130,13 @@ fun HighscoreScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White
                     )
+                    if (lastThrow != null) {
+                        Text(
+                            "Last Throw: ${lastThrow?.score}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Yellow
+                        )
+                    }
 
                     OutlinedTextField(
                         value = throwScoreInput,
@@ -146,43 +165,136 @@ fun HighscoreScreen(
                         )
                     }
 
-                    Button(
-                        onClick = {
-                            val throwScore = throwScoreInput.toIntOrNull()
-                            if (throwScore != null && throwScore >= 0) {
-                                gameState.value =
-                                    updateHighscoreGameState(gameState.value, throwScore)
-                                throwScoreInput = ""
-
-                                if (gameState.value.throwsRemaining <= 0) {
-                                    val levelResult = getLevelResult(gameState.value)
-                                    StorageHelper.saveLevelResult(levelResult)
-                                    navController.popBackStack()
-                                }
-                            }
-                        },
-                        enabled = gameState.value.throwsRemaining > 0 && isInputValid,
-                        modifier = Modifier
-                            .width(200.dp)
-                            .height(60.dp),
-                        contentPadding = PaddingValues(16.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Thrown (3 darts)", style = MaterialTheme.typography.labelLarge)
+                        Button(
+                            onClick = {
+                                val throwScore = throwScoreInput.toIntOrNull()
+                                if (throwScore != null && throwScore >= 0) {
+                                    val newThrow = HighscoreDartThrow(throwScore)
+                                    lastThrow = newThrow
+                                    gameState.value =
+                                        updateHighscoreGameState(gameState.value, throwScore)
+                                    throwScoreInput = ""
+                                    canRedo = true
+                                }
+                            },
+                            enabled = gameState.value.throwsRemaining > 0 && isInputValid,
+                            modifier = Modifier
+                                .width(180.dp)
+                                .height(60.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Text("Throw", style = MaterialTheme.typography.labelLarge)
+                        }
+
+                        Button(
+                            onClick = {
+                                if (canRedo && lastThrow != null) {
+                                    val scoreToRemove = lastThrow!!.score
+                                    val updatedThrows = gameState.value.throws.toMutableList()
+                                    updatedThrows.remove(lastThrow)
+
+                                    gameState.value = gameState.value.copy(
+                                        currentScore = gameState.value.currentScore - scoreToRemove,
+                                        throwsRemaining = gameState.value.throwsRemaining + 1,
+                                        throws = updatedThrows
+                                    )
+                                    lastThrow = null
+                                    canRedo = false
+                                }
+                            },
+                            enabled = canRedo && gameState.value.throws.isNotEmpty() && gameState.value.throwsRemaining < 5,
+                            modifier = Modifier
+                                .width(120.dp)
+                                .height(60.dp),
+                            contentPadding = PaddingValues(16.dp)
+                        ) {
+                            Text("Undo", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = { showExitDialog = true }) {
                 Text("Back", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
+
+    if (showGameOverDialog) {
+        AlertDialog(
+            onDismissRequest = { /* Prevent dismissing by tapping outside */ },
+            title = { Text("Game end!", style = MaterialTheme.typography.headlineSmall) },
+            text = {
+                Column {
+                    Text(
+                        "Current Score: ${gameState.value.currentScore}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Stars Earned: $currentStars",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (lastThrow != null && gameState.value.throws.isNotEmpty()) {
+                        Text(
+                            "Last Throw: ${lastThrow?.score}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (lastThrow != null) {
+                            val scoreToRemove = lastThrow!!.score
+                            val updatedThrows = gameState.value.throws.toMutableList()
+                            updatedThrows.remove(lastThrow)
+                            gameState.value = gameState.value.copy(
+                                currentScore = gameState.value.currentScore - scoreToRemove,
+                                throwsRemaining = gameState.value.throwsRemaining + 1,
+                                throws = updatedThrows
+                            )
+                            lastThrow = null
+                            canRedo = false
+                            showGameOverDialog = false
+                        } else {
+                            showGameOverDialog = false
+                            val levelResult = getLevelResult(gameState.value)
+                            StorageHelper.saveLevelResult(levelResult)
+                            navController.popBackStack()
+                        }
+                    },
+                    enabled = lastThrow != null && gameState.value.throws.isNotEmpty()
+                ) {
+                    Text("Undo", style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        showGameOverDialog = false
+                        val levelResult = getLevelResult(gameState.value)
+                        StorageHelper.saveLevelResult(levelResult)
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Finish", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        )
+    }
+
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
             title = { Text("Confirm Exit", style = MaterialTheme.typography.headlineSmall) },
             text = {
                 Text(
-                    "Are you sure you want to exit? Your progress will be saved.",
+                    "Are you sure you want to exit? ",
                     style = MaterialTheme.typography.bodyLarge
                 )
             },
@@ -219,6 +331,7 @@ class NumberOffsetMapping(private val length: Int) : OffsetMapping {
     override fun originalToTransformed(offset: Int): Int = offset
     override fun transformedToOriginal(offset: Int): Int = offset.coerceAtMost(length)
 }
+
 
 @Preview(showBackground = true)
 @Preview(name = "Pixel 7 pro", device = Devices.PIXEL_7_PRO)
