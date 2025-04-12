@@ -173,7 +173,8 @@ fun HighscoreScreen(
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth() // Make the Row take full width
                     ) {
                         Button(
                             onClick = {
@@ -186,20 +187,20 @@ fun HighscoreScreen(
                             },
                             enabled = gameState.value.throwsRemaining > 0 && isInputValid,
                             modifier = Modifier
-                                .width(180.dp)
+                                .weight(2f) // 2 parts of the weight
                                 .height(60.dp),
                             contentPadding = PaddingValues(16.dp)
                         ) {
                             Text("Throw", style = MaterialTheme.typography.labelLarge)
                         }
-
+                        Spacer(modifier = Modifier.width(2.dp)) // Add some space between buttons
                         Button(
                             onClick = {
                                 gameState.value = undoHighscoreGameState(gameState.value)
                             },
                             enabled = canUndo && gameState.value.throwsRemaining < 5,
                             modifier = Modifier
-                                .width(120.dp)
+                                .weight(1f) // 1 part of the weight
                                 .height(60.dp),
                             contentPadding = PaddingValues(16.dp)
                         ) {

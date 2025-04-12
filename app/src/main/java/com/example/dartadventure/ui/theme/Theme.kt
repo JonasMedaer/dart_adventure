@@ -92,7 +92,7 @@ private val MyDarkColorScheme = ColorScheme(
 fun ScaledTypography(): Typography {
     val configuration = LocalConfiguration.current
     val isTablet = configuration.screenWidthDp >= 600 // Adjust threshold as needed
-    val scaleFactor = if (isTablet) 2f else 1.1f
+    val scaleFactor = if (isTablet) 2f else 1f
 
     return Typography(
         displayLarge = MaterialTheme.typography.displayLarge.scaled(scaleFactor),
