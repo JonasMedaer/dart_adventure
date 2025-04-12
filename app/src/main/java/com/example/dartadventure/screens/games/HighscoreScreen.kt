@@ -51,6 +51,7 @@ import com.example.dartadventure.data.games.HighscoreDartThrow
 import com.example.dartadventure.data.games.calculateStars
 import com.example.dartadventure.data.games.getLevelResult
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
+import com.example.dartadventure.data.highscore.undoHighscoreGameState
 import com.example.dartadventure.data.highscore.updateHighscoreGameState
 import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.StorageHelper
@@ -70,7 +71,7 @@ fun HighscoreScreen(
         if (isLandscape) R.drawable.highscore_game_tablet else R.drawable.highscore_game
     var showExitDialog by remember { mutableStateOf(false) }
     var lastThrow by remember { mutableStateOf<HighscoreDartThrow?>(null) }
-    var canRedo by remember { mutableStateOf(false) }
+    var canUndo by remember { mutableStateOf(false) }
     var showGameOverDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(gameState.value.currentScore) {
@@ -81,6 +82,11 @@ fun HighscoreScreen(
         if (gameState.value.throwsRemaining <= 0) {
             showGameOverDialog = true
         }
+    }
+
+    LaunchedEffect(gameState.value.throws) {
+        canUndo = gameState.value.throws.isNotEmpty()
+        lastThrow = gameState.value.throws.lastOrNull()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -173,12 +179,9 @@ fun HighscoreScreen(
                             onClick = {
                                 val throwScore = throwScoreInput.toIntOrNull()
                                 if (throwScore != null && throwScore >= 0) {
-                                    val newThrow = HighscoreDartThrow(throwScore)
-                                    lastThrow = newThrow
                                     gameState.value =
                                         updateHighscoreGameState(gameState.value, throwScore)
                                     throwScoreInput = ""
-                                    canRedo = true
                                 }
                             },
                             enabled = gameState.value.throwsRemaining > 0 && isInputValid,
@@ -192,21 +195,9 @@ fun HighscoreScreen(
 
                         Button(
                             onClick = {
-                                if (canRedo && lastThrow != null) {
-                                    val scoreToRemove = lastThrow!!.score
-                                    val updatedThrows = gameState.value.throws.toMutableList()
-                                    updatedThrows.remove(lastThrow)
-
-                                    gameState.value = gameState.value.copy(
-                                        currentScore = gameState.value.currentScore - scoreToRemove,
-                                        throwsRemaining = gameState.value.throwsRemaining + 1,
-                                        throws = updatedThrows
-                                    )
-                                    lastThrow = null
-                                    canRedo = false
-                                }
+                                gameState.value = undoHighscoreGameState(gameState.value)
                             },
-                            enabled = canRedo && gameState.value.throws.isNotEmpty() && gameState.value.throwsRemaining < 5,
+                            enabled = canUndo && gameState.value.throwsRemaining < 5,
                             modifier = Modifier
                                 .width(120.dp)
                                 .height(60.dp),
@@ -249,26 +240,10 @@ fun HighscoreScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        if (lastThrow != null) {
-                            val scoreToRemove = lastThrow!!.score
-                            val updatedThrows = gameState.value.throws.toMutableList()
-                            updatedThrows.remove(lastThrow)
-                            gameState.value = gameState.value.copy(
-                                currentScore = gameState.value.currentScore - scoreToRemove,
-                                throwsRemaining = gameState.value.throwsRemaining + 1,
-                                throws = updatedThrows
-                            )
-                            lastThrow = null
-                            canRedo = false
-                            showGameOverDialog = false
-                        } else {
-                            showGameOverDialog = false
-                            val levelResult = getLevelResult(gameState.value)
-                            StorageHelper.saveLevelResult(levelResult)
-                            navController.popBackStack()
-                        }
+                        gameState.value = undoHighscoreGameState(gameState.value)
+                        showGameOverDialog = false
                     },
-                    enabled = lastThrow != null && gameState.value.throws.isNotEmpty()
+                    enabled = canUndo && gameState.value.throws.isNotEmpty()
                 ) {
                     Text("Undo", style = MaterialTheme.typography.labelLarge)
                 }

@@ -11,7 +11,7 @@ fun updateHighscoreGameState(gameState: HighscoreGameState, throwScore: Int): Hi
     if (gameState.throwsRemaining <= 0) {
         return gameState
     }
-    val newThrow = HighscoreDartThrow(throwScore) // Use HighscoreDartThrow
+    val newThrow = HighscoreDartThrow(throwScore)
     val updatedThrows = gameState.throws.toMutableList().apply { add(newThrow) }
     val newScore = calculateScore(updatedThrows)
     val remaining = gameState.throwsRemaining - 1
@@ -19,5 +19,22 @@ fun updateHighscoreGameState(gameState: HighscoreGameState, throwScore: Int): Hi
         throwsRemaining = remaining,
         currentScore = newScore,
         throws = updatedThrows
+    )
+}
+
+fun undoHighscoreGameState(gameState: HighscoreGameState): HighscoreGameState {
+    if (gameState.throws.isEmpty()) {
+        return gameState // Nothing to undo
+    }
+
+    val lastThrow = gameState.throws.last()
+    val previousThrows = gameState.throws.dropLast(1).toMutableList()
+    val newScore = calculateScore(previousThrows)
+    val newThrowsRemaining = gameState.throwsRemaining + 1
+
+    return gameState.copy(
+        currentScore = newScore,
+        throwsRemaining = newThrowsRemaining,
+        throws = previousThrows
     )
 }

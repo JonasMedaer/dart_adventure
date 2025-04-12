@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,7 +42,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
 import com.example.dartadventure.data.LevelResult
 import com.example.dartadventure.data.aroundtheclock.calculateAroundTheClockScore
+import com.example.dartadventure.data.aroundtheclock.undoAroundTheClockGameState
 import com.example.dartadventure.data.aroundtheclock.updateAroundTheClockGameState
+import com.example.dartadventure.data.games.AroundTheClockDartThrow
 import com.example.dartadventure.data.games.Game
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.calculateStars
@@ -55,7 +59,9 @@ fun AroundTheClockScreen(
     getGameData: (Int) -> Game?,
     storageHelper: StorageInterface
 ) {
-    var dartsThisTurn by remember { mutableStateOf(0) }
+    var dartsThisTurn by remember { mutableStateOf(gameState.value.dartsThrown % 3) }
+    var canUndo by remember { mutableStateOf(false) }
+    var showGameOverDialog by remember { mutableStateOf(false) }
     val levelResult = storageHelper.getLevelResult(
         gameState.value.currentChapterId,
         gameState.value.currentGameId
@@ -70,6 +76,7 @@ fun AroundTheClockScreen(
     val backgroundImage =
         if (isLandscape) R.drawable.castle_tablet else R.drawable.castle
     var showExitDialog by remember { mutableStateOf(false) }
+    var lastThrow by remember { mutableStateOf<AroundTheClockDartThrow?>(null) }
 
     LaunchedEffect(game) {
         if (!gameState.value.initialized) {
@@ -81,6 +88,17 @@ fun AroundTheClockScreen(
         }
         currentStars =
             levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
+    }
+
+    LaunchedEffect(gameState.value.gameFinished) {
+        if (gameState.value.gameFinished) {
+            showGameOverDialog = true
+        }
+    }
+
+    LaunchedEffect(gameState.value.throws) {
+        canUndo = gameState.value.throws.isNotEmpty()
+        lastThrow = gameState.value.throws.lastOrNull()
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -147,35 +165,25 @@ fun AroundTheClockScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White
                     )
+                    if (lastThrow != null) {
+                        Text(
+                            "Last Action: ${if (lastThrow!!.hit) "Hit" else "Miss"} on ${lastThrow?.target}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Yellow
+                        )
+                    }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
                             onClick = {
-                                if (dartsThisTurn < 3) {
-                                    dartsThisTurn++
+                                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
                                     gameState.value = updateAroundTheClockGameState(
                                         gameState.value,
                                         true
                                     )
-                                    if (gameState.value.gameFinished) {
-                                        val finalScore =
-                                            calculateAroundTheClockScore(gameState.value.totalDartsUsed)
-                                        val currentGame = getGameData(gameState.value.currentGameId)
-                                        val stars = if (currentGame != null) calculateStars(
-                                            finalScore,
-                                            currentGame.starThresholds
-                                        ) else 0
-                                        val newLevelResult = LevelResult(
-                                            chapter = gameState.value.currentChapterId,
-                                            game = gameState.value.currentGameId,
-                                            score = finalScore,
-                                            stars = stars
-                                        )
-                                        storageHelper.saveLevelResult(newLevelResult)
-                                        navController.popBackStack()
-                                    }
+                                    dartsThisTurn++
                                 }
                                 if (dartsThisTurn == 3) {
                                     dartsThisTurn = 0
@@ -183,7 +191,7 @@ fun AroundTheClockScreen(
                                 currentStars =
                                     calculateStars(gameState.value.currentScore, starThresholds)
                             },
-                            enabled = dartsThisTurn < 3,
+                            enabled = !gameState.value.gameFinished,
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(0.3f)
@@ -193,12 +201,12 @@ fun AroundTheClockScreen(
                         }
                         Button(
                             onClick = {
-                                if (dartsThisTurn < 3) {
-                                    dartsThisTurn++
+                                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
                                     gameState.value = updateAroundTheClockGameState(
                                         gameState.value,
                                         false
                                     )
+                                    dartsThisTurn++
                                 }
                                 if (dartsThisTurn == 3) {
                                     dartsThisTurn = 0
@@ -206,7 +214,7 @@ fun AroundTheClockScreen(
                                 currentStars =
                                     calculateStars(gameState.value.currentScore, starThresholds)
                             },
-                            enabled = dartsThisTurn < 3,
+                            enabled = !gameState.value.gameFinished,
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight(0.3f)
@@ -217,6 +225,19 @@ fun AroundTheClockScreen(
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
+                        Button(
+                            onClick = {
+                                gameState.value = undoAroundTheClockGameState(gameState.value)
+                                dartsThisTurn = gameState.value.dartsThrown % 3
+                            },
+                            enabled = canUndo && !gameState.value.gameFinished,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(0.3f)
+                                .fillMaxWidth(0.3f)
+                        ) {
+                            Text("Undo", style = MaterialTheme.typography.labelLarge)
+                        }
                     }
                 }
             }
@@ -224,6 +245,66 @@ fun AroundTheClockScreen(
                 Text("Back", style = MaterialTheme.typography.labelLarge)
             }
         }
+    }
+
+    if (showGameOverDialog) {
+        val finalScore = calculateAroundTheClockScore(gameState.value.totalDartsUsed)
+        val finalStars = calculateStars(finalScore, starThresholds)
+        AlertDialog(
+            onDismissRequest = { /* Prevent dismissing by tapping outside */ },
+            title = { Text("Game end!", style = MaterialTheme.typography.headlineSmall) },
+            text = {
+                Column {
+                    Text(
+                        "Total Darts: ${gameState.value.totalDartsUsed}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Current Score: ${gameState.value.currentScore}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "Stars Earned: $finalStars",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showGameOverDialog = false
+                        val finalScore =
+                            calculateAroundTheClockScore(gameState.value.totalDartsUsed)
+                        val stars = calculateStars(finalScore, starThresholds)
+                        val newLevelResult = LevelResult(
+                            chapter = gameState.value.currentChapterId,
+                            game = gameState.value.currentGameId,
+                            score = finalScore,
+                            stars = stars
+                        )
+                        storageHelper.saveLevelResult(newLevelResult)
+                        navController.popBackStack()
+                    }
+                ) {
+                    Text("Finish", style = MaterialTheme.typography.labelLarge)
+                }
+            },
+            dismissButton = {
+                if (canUndo) {
+                    Button(
+                        onClick = {
+                            gameState.value = undoAroundTheClockGameState(gameState.value)
+                            dartsThisTurn = gameState.value.dartsThrown % 3
+                            showGameOverDialog = false
+                        }
+                    ) {
+                        Text("Undo Last", style = MaterialTheme.typography.labelLarge)
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(0.dp)) // No button if no undo possible
+                }
+            }
+        )
     }
 
     if (showExitDialog) {
@@ -262,14 +343,23 @@ fun AroundTheClockScreen(
 @Composable
 fun AroundTheClockScreenPreview() {
     val navController = rememberNavController()
-    val mockGameState = remember { mutableStateOf(AroundTheClockGameState()) }
+    val mockGameState = remember {
+        mutableStateOf(
+            AroundTheClockGameState(
+                gameFinished = true,
+                totalDartsUsed = 15,
+                currentScore = 20,
+                throws = mutableListOf()
+            )
+        )
+    }
     val mockGetGameData: (Int) -> Game? = remember {
         { gameId ->
             Game(
                 id = gameId,
                 name = "Mock Game",
                 description = "This is a mock game for preview.",
-                starThresholds = listOf(100, 200, 300, 400, 500),
+                starThresholds = listOf(10, 20, 30, 40, 50),
                 initialThrows = null
             )
         }
