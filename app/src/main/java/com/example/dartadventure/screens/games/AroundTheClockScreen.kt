@@ -8,14 +8,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,12 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -111,138 +114,164 @@ fun AroundTheClockScreen(
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween // Distribute space more evenly
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .fillMaxHeight(0.8f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+            // Top Section
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(top = 32.dp)
             ) {
-                Column(
-                    modifier = Modifier.fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Text(
+                    "Around the Clock",
+                    style = MaterialTheme.typography.headlineMedium, // Increased size
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
+                            CircleShape
+                        )
+                        .padding(48.dp)
+                        .width(160.dp)
+                        .height(160.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Around the Clock",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White
+                        "${gameState.value.currentTarget}",
+                        style = TextStyle(
+                            fontSize = 120.sp,
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1, // Prevent text from wrapping if it somehow overflows
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Clip // Clip overflow
                     )
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                MaterialTheme.colorScheme.secondary,
-                                RoundedCornerShape(8.dp)
-                            )
-                            .padding(horizontal = 64.dp, vertical = 32.dp)
-
-                    ) {
-                        Text(
-                            "${gameState.value.currentTarget}",
-                            style = TextStyle(
-                                fontSize = 84.sp,
-                                color = MaterialTheme.colorScheme.onSecondary
-                            ),
-                        )
-                    }
-                    Text(
-                        "Total Darts Used: ${gameState.value.totalDartsUsed}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                    Text(
-                        "Current Stars: $currentStars",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                    Text(
-                        "Score: ${gameState.value.currentScore}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    "Darts Used: ${gameState.value.totalDartsUsed}",
+                    style = MaterialTheme.typography.titleLarge, // Made bigger
+                    color = Color.White
+                )
+                Text(
+                    "Stars: $currentStars",
+                    style = MaterialTheme.typography.titleLarge, // Made bigger
+                    color = Color.White
+                )
+                Text(
+                    "Score: ${gameState.value.currentScore}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val lineHeightDp = with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() }
+                Box(modifier = Modifier.height(lineHeightDp)) {
                     if (lastThrow != null) {
                         Text(
                             "Last Action: ${if (lastThrow!!.hit) "Hit" else "Miss"} on ${lastThrow?.target}",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = Color.Yellow
                         )
                     }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = {
-                                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
-                                    gameState.value = updateAroundTheClockGameState(
-                                        gameState.value,
-                                        true
-                                    )
-                                    dartsThisTurn++
-                                }
-                                if (dartsThisTurn == 3) {
-                                    dartsThisTurn = 0
-                                }
-                                currentStars =
-                                    calculateStars(gameState.value.currentScore, starThresholds)
-                            },
-                            enabled = !gameState.value.gameFinished,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(0.3f)
-                                .fillMaxWidth(0.3f)
-                        ) {
-                            Text("Hit", style = MaterialTheme.typography.labelLarge)
-                        }
-                        Button(
-                            onClick = {
-                                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
-                                    gameState.value = updateAroundTheClockGameState(
-                                        gameState.value,
-                                        false
-                                    )
-                                    dartsThisTurn++
-                                }
-                                if (dartsThisTurn == 3) {
-                                    dartsThisTurn = 0
-                                }
-                                currentStars =
-                                    calculateStars(gameState.value.currentScore, starThresholds)
-                            },
-                            enabled = !gameState.value.gameFinished,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(0.3f)
-                                .fillMaxWidth(0.3f)
-                        ) {
-                            Text(
-                                "Miss",
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                        Button(
-                            onClick = {
-                                gameState.value = undoAroundTheClockGameState(gameState.value)
-                                dartsThisTurn = gameState.value.dartsThrown % 3
-                            },
-                            enabled = canUndo && !gameState.value.gameFinished,
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(0.3f)
-                                .fillMaxWidth(0.3f)
-                        ) {
-                            Text("Undo", style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
                 }
             }
-            Button(onClick = { showExitDialog = true }) {
-                Text("Back", style = MaterialTheme.typography.labelLarge)
+
+            // Middle Section - Hit and Miss Buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Button(
+                    onClick = {
+                        if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
+                            gameState.value = updateAroundTheClockGameState(
+                                gameState.value,
+                                true
+                            )
+                            dartsThisTurn++
+                        }
+                        if (dartsThisTurn == 3) {
+                            dartsThisTurn = 0
+                        }
+                        currentStars =
+                            calculateStars(gameState.value.currentScore, starThresholds)
+                    },
+                    enabled = !gameState.value.gameFinished,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(72.dp), // Increased button height
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)) // Green for Hit
+                ) {
+                    Text("Hit", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                }
+                Button(
+                    onClick = {
+                        if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
+                            gameState.value = updateAroundTheClockGameState(
+                                gameState.value,
+                                false
+                            )
+                            dartsThisTurn++
+                        }
+                        if (dartsThisTurn == 3) {
+                            dartsThisTurn = 0
+                        }
+                        currentStars =
+                            calculateStars(gameState.value.currentScore, starThresholds)
+                    },
+                    enabled = !gameState.value.gameFinished,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(72.dp), // Increased button height
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)) // Red for Miss
+                ) {
+                    Text("Miss", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                }
+            }
+
+            // Spacer for room
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Bottom Section - Undo and Navigation Button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                Button(
+                    onClick = {
+                        gameState.value = undoAroundTheClockGameState(gameState.value)
+                        dartsThisTurn = gameState.value.dartsThrown % 3
+                    },
+                    enabled = canUndo && !gameState.value.gameFinished,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(72.dp), // Increased button height
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Blue for Undo
+                ) {
+                    Text("Undo", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = { showExitDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Back", style = MaterialTheme.typography.titleMedium)
+                }
             }
         }
     }
@@ -252,20 +281,26 @@ fun AroundTheClockScreen(
         val finalStars = calculateStars(finalScore, starThresholds)
         AlertDialog(
             onDismissRequest = { /* Prevent dismissing by tapping outside */ },
-            title = { Text("Game end!", style = MaterialTheme.typography.headlineSmall) },
+            title = {
+                Text(
+                    "Game Over!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Column {
                     Text(
                         "Total Darts: ${gameState.value.totalDartsUsed}",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        "Current Score: ${gameState.value.currentScore}",
-                        style = MaterialTheme.typography.bodyMedium
+                        "Final Score: ${finalScore}",
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
                         "Stars Earned: $finalStars",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyLarge
                     )
                 }
             },
@@ -284,7 +319,8 @@ fun AroundTheClockScreen(
                         )
                         storageHelper.saveLevelResult(newLevelResult)
                         navController.popBackStack()
-                    }
+                    },
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Finish", style = MaterialTheme.typography.labelLarge)
                 }
@@ -296,12 +332,11 @@ fun AroundTheClockScreen(
                             gameState.value = undoAroundTheClockGameState(gameState.value)
                             dartsThisTurn = gameState.value.dartsThrown % 3
                             showGameOverDialog = false
-                        }
+                        },
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("Undo Last", style = MaterialTheme.typography.labelLarge)
                     }
-                } else {
-                    Spacer(modifier = Modifier.width(0.dp)) // No button if no undo possible
                 }
             }
         )
@@ -310,7 +345,13 @@ fun AroundTheClockScreen(
     if (showExitDialog) {
         AlertDialog(
             onDismissRequest = { showExitDialog = false },
-            title = { Text("Confirm Exit", style = MaterialTheme.typography.headlineSmall) },
+            title = {
+                Text(
+                    "Confirm Exit",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Text(
                     "Are you sure you want to exit? Your progress will be saved.",
@@ -322,13 +363,14 @@ fun AroundTheClockScreen(
                     onClick = {
                         showExitDialog = false
                         navController.popBackStack()
-                    }
+                    },
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Exit", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
-                Button(onClick = { showExitDialog = false }) {
+                Button(onClick = { showExitDialog = false }, shape = RoundedCornerShape(8.dp)) {
                     Text("Cancel", style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -346,9 +388,10 @@ fun AroundTheClockScreenPreview() {
     val mockGameState = remember {
         mutableStateOf(
             AroundTheClockGameState(
-                gameFinished = true,
-                totalDartsUsed = 15,
-                currentScore = 20,
+                gameFinished = false,
+                totalDartsUsed = 5,
+                currentScore = 5,
+                currentTarget = 6,
                 throws = mutableListOf()
             )
         )
