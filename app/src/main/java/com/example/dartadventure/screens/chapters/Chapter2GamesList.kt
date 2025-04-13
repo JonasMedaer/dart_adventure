@@ -20,8 +20,10 @@ fun Chapter2GamesList(
     chapter: Chapter,
     getLevelResult: (Int, Int) -> LevelResult?
 ) {
-    val backgroundImage = R.drawable.harbor
-    val backgroundImageTablet = R.drawable.harbor_tablet
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val backgroundImage =
+        if (isLandscape) R.drawable.harbor_tablet else R.drawable.harbor
 
     val gameNavigation: (Int, Int, NavController) -> Unit = { chapterId, gameId, navController ->
         when (gameId) {
@@ -34,9 +36,7 @@ fun Chapter2GamesList(
         navController = navController,
         chapter = chapter,
         getLevelResult = getLevelResult,
-        backgroundImageId = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE ||
-            LocalConfiguration.current.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK >= Configuration.SCREENLAYOUT_SIZE_LARGE
-        ) backgroundImageTablet else backgroundImage,
+        backgroundImageId = backgroundImage,
         gameNavigation = gameNavigation
     )
 }

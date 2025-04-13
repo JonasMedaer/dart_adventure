@@ -57,13 +57,9 @@ fun ChapterSelectScreen(
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTablet =
-        configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK >= Configuration.SCREENLAYOUT_SIZE_LARGE
-    val backgroundImage = if (isLandscape || isTablet) {
-        R.drawable.chapterselect_0_tablet
-    } else {
-        R.drawable.chapterselect_0
-    }
+    val backgroundImage =
+        if (isLandscape) R.drawable.chapterselect_0_tablet else R.drawable.chapterselect_0
+
     val (overallCurrentStars, overallPossibleStars) = calculateOverallStars(chapters)
     val unlockThresholds = mapOf(
         1 to 0,

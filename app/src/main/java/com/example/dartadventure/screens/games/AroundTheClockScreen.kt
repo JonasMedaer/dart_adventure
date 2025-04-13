@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,7 @@ import com.example.dartadventure.R
 import com.example.dartadventure.data.LevelResult
 import com.example.dartadventure.data.aroundtheclock.calculateAroundTheClockScore
 import com.example.dartadventure.data.aroundtheclock.undoAroundTheClockGameState
+import com.example.dartadventure.data.aroundtheclock.undoLastThrowAfterGameOver
 import com.example.dartadventure.data.aroundtheclock.updateAroundTheClockGameState
 import com.example.dartadventure.data.games.AroundTheClockDartThrow
 import com.example.dartadventure.data.games.Game
@@ -63,7 +67,7 @@ fun AroundTheClockScreen(
     storageHelper: StorageInterface
 ) {
     var dartsThisTurn by remember { mutableStateOf(gameState.value.dartsThrown % 3) }
-    var canUndo by remember { mutableStateOf(false) }
+    var canUndo by remember { mutableStateOf(gameState.value.throws.isNotEmpty()) } // Initialize based on initial state
     var showGameOverDialog by remember { mutableStateOf(false) }
     val levelResult = storageHelper.getLevelResult(
         gameState.value.currentChapterId,
@@ -71,9 +75,7 @@ fun AroundTheClockScreen(
     )
     val game = getGameData(gameState.value.currentGameId)
     val starThresholds = game?.starThresholds ?: emptyList()
-    var currentStars by remember {
-        mutableStateOf(levelResult?.stars ?: 0)
-    }
+    var currentStars by remember { mutableStateOf(0) } // Initialize to 0, LaunchedEffect will update
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val backgroundImage =
@@ -81,25 +83,37 @@ fun AroundTheClockScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     var lastThrow by remember { mutableStateOf<AroundTheClockDartThrow?>(null) }
 
+    // Fetch initial game data like mustEndOnBullseye
     LaunchedEffect(game) {
-        if (!gameState.value.initialized) {
-            val mustEndOnBullseye = game?.mustEndOnBullseye ?: false
+        if (game != null && !gameState.value.initialized) {
+            val mustEndOnBullseye = game.mustEndOnBullseye ?: false
             gameState.value = gameState.value.copy(
                 mustEndOnBullseye = mustEndOnBullseye,
                 initialized = true
             )
         }
-        currentStars =
-            levelResult?.stars ?: calculateStars(gameState.value.currentScore, starThresholds)
     }
 
-    LaunchedEffect(gameState.value.gameFinished) {
-        if (gameState.value.gameFinished) {
+    // Calculate initial stars and score based on potentially loaded state
+    LaunchedEffect(Unit, gameState.value.totalDartsUsed, starThresholds) {
+        // Recalculate score and stars when darts used changes or thresholds load
+        // This ensures consistency if gameState is loaded externally
+        val score = calculateAroundTheClockScore(gameState.value.totalDartsUsed)
+        gameState.value = gameState.value.copy(currentScore = score) // Update score in state
+        currentStars = calculateStars(score, starThresholds)
+        // Update canUndo based on loaded throws
+        canUndo = gameState.value.throws.isNotEmpty()
+        lastThrow = gameState.value.throws.lastOrNull()
+        // Reset darts this turn based on loaded state
+        dartsThisTurn = gameState.value.dartsThrown % 3
+    }
+
+    // Observe game state changes for stars, game over, undo state, last throw
+    LaunchedEffect(gameState.value) {
+        currentStars = calculateStars(gameState.value.currentScore, starThresholds)
+        if (gameState.value.gameFinished && !showGameOverDialog) {
             showGameOverDialog = true
         }
-    }
-
-    LaunchedEffect(gameState.value.throws) {
         canUndo = gameState.value.throws.isNotEmpty()
         lastThrow = gameState.value.throws.lastOrNull()
     }
@@ -117,35 +131,44 @@ fun AroundTheClockScreen(
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.6f)) // Semi-transparent background
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                TopSection(
-                    gameState = gameState.value,
-                    currentStars = currentStars,
-                    lastThrow = lastThrow
-                )
-                ActionButtons(
+            // Choose layout based on orientation
+            if (isLandscape) {
+                LandscapeLayout(
                     gameState = gameState,
+                    currentStars = currentStars,
+                    lastThrow = lastThrow,
                     dartsThisTurn = dartsThisTurn,
                     onDartsThisTurnChange = { dartsThisTurn = it },
                     starThresholds = starThresholds,
-                    onCanUndoChange = { canUndo = it }
-                )
-                BottomNavigation(
+                    onCanUndoChange = { canUndo = it },
+                    canUndo = canUndo,
                     onUndo = {
                         gameState.value = undoAroundTheClockGameState(gameState.value)
                         dartsThisTurn = gameState.value.dartsThrown % 3
                     },
+                    onBack = { showExitDialog = true }
+                )
+            } else {
+                PortraitLayout(
+                    gameState = gameState,
+                    currentStars = currentStars,
+                    lastThrow = lastThrow,
+                    dartsThisTurn = dartsThisTurn,
+                    onDartsThisTurnChange = { dartsThisTurn = it },
+                    starThresholds = starThresholds,
+                    onCanUndoChange = { canUndo = it },
                     canUndo = canUndo,
+                    onUndo = {
+                        gameState.value = undoAroundTheClockGameState(gameState.value)
+                        dartsThisTurn = gameState.value.dartsThrown % 3
+                    },
                     onBack = { showExitDialog = true }
                 )
             }
         }
     }
 
+    // Dialogs remain the same
     GameOverDialog(
         showDialog = showGameOverDialog,
         gameState = gameState.value,
@@ -165,7 +188,7 @@ fun AroundTheClockScreen(
             navController.popBackStack()
         },
         onUndoLast = {
-            gameState.value = undoAroundTheClockGameState(gameState.value)
+            gameState.value = undoLastThrowAfterGameOver(gameState.value)
             dartsThisTurn = gameState.value.dartsThrown % 3
             showGameOverDialog = false
         },
@@ -180,37 +203,168 @@ fun AroundTheClockScreen(
 }
 
 @Composable
+private fun PortraitLayout(
+    gameState: MutableState<AroundTheClockGameState>,
+    currentStars: Int,
+    lastThrow: AroundTheClockDartThrow?,
+    dartsThisTurn: Int,
+    onDartsThisTurnChange: (Int) -> Unit,
+    starThresholds: List<Int>,
+    onCanUndoChange: (Boolean) -> Unit,
+    canUndo: Boolean,
+    onUndo: () -> Unit,
+    onBack: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        TopSection(
+            gameState = gameState.value,
+            currentStars = currentStars,
+            lastThrow = lastThrow,
+            isLandscape = false
+        )
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            ActionButtons(
+                gameState = gameState,
+                dartsThisTurn = dartsThisTurn,
+                onDartsThisTurnChange = onDartsThisTurnChange,
+                starThresholds = starThresholds,
+                onCanUndoChange = onCanUndoChange,
+                isLandscape = false
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            UndoButtonComposable(
+                onUndo = onUndo,
+                canUndo = canUndo
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            BackButtonComposable(
+                onBack = onBack
+            )
+        }
+    }
+}
+
+@Composable
+private fun LandscapeLayout(
+    gameState: MutableState<AroundTheClockGameState>,
+    currentStars: Int,
+    lastThrow: AroundTheClockDartThrow?,
+    dartsThisTurn: Int,
+    onDartsThisTurnChange: (Int) -> Unit,
+    starThresholds: List<Int>,
+    onCanUndoChange: (Boolean) -> Unit,
+    canUndo: Boolean,
+    onUndo: () -> Unit,
+    onBack: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        ) {
+            TopSection(
+                gameState = gameState.value,
+                currentStars = currentStars,
+                lastThrow = lastThrow,
+                isLandscape = true
+            )
+        }
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+        ) {
+            // Centered Controls (Hit, Miss, Undo)
+            Column(
+                modifier = Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ActionButtons(
+                    gameState = gameState,
+                    dartsThisTurn = dartsThisTurn,
+                    onDartsThisTurnChange = onDartsThisTurnChange,
+                    starThresholds = starThresholds,
+                    onCanUndoChange = onCanUndoChange,
+                    isLandscape = true
+                )
+                Spacer(modifier = Modifier.height(24.dp)) // Space between Action and Undo
+                UndoButtonComposable(
+                    onUndo = onUndo,
+                    canUndo = canUndo
+                )
+            }
+
+            BackButtonComposable(
+                onBack = onBack,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+    }
+}
+
+@Composable
 private fun TopSection(
     gameState: AroundTheClockGameState,
     currentStars: Int,
-    lastThrow: AroundTheClockDartThrow?
+    lastThrow: AroundTheClockDartThrow?,
+    isLandscape: Boolean
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(top = 32.dp)
+        // Reduce top padding slightly in landscape to center better
+        modifier = Modifier.padding(top = if (isLandscape) 16.dp else 32.dp)
     ) {
         Text(
             "Around the Clock",
             style = MaterialTheme.typography.headlineMedium,
             color = Color.White,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(16.dp))
+
+        // Slightly smaller target display in landscape? Optional.
+        val boxSize = if (isLandscape) 140.dp else 160.dp
+        val paddingSize = if (isLandscape) 40.dp else 48.dp
+        val fontSize = if (isLandscape) 100.sp else 120.sp
+
         Box(
             modifier = Modifier
                 .background(
                     MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
                     CircleShape
                 )
-                .padding(48.dp)
-                .width(160.dp)
-                .height(160.dp),
+                .padding(paddingSize)
+                .width(boxSize)
+                .height(boxSize),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 "${gameState.currentTarget}",
                 style = TextStyle(
-                    fontSize = 120.sp,
+                    fontSize = fontSize,
                     color = MaterialTheme.colorScheme.onSecondary,
                     fontWeight = FontWeight.Bold
                 ),
@@ -218,14 +372,15 @@ private fun TopSection(
                 overflow = androidx.compose.ui.text.style.TextOverflow.Clip
             )
         }
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Text(
             "Darts Used: ${gameState.totalDartsUsed}",
             style = MaterialTheme.typography.titleLarge,
             color = Color.White
         )
+        val maxStars = 5
         Text(
-            "Stars: $currentStars",
+            "Stars: $currentStars / $maxStars",
             style = MaterialTheme.typography.titleLarge,
             color = Color.White
         )
@@ -237,12 +392,16 @@ private fun TopSection(
         Spacer(modifier = Modifier.height(8.dp))
         val lineHeightDp =
             with(LocalDensity.current) { MaterialTheme.typography.bodyLarge.lineHeight.toDp() }
-        Box(modifier = Modifier.height(lineHeightDp)) {
+        // Use minHeight instead of fixed height to allow shrinking if no text
+        Box(modifier = Modifier.defaultMinSize(minHeight = lineHeightDp * 2)) {
             if (lastThrow != null) {
                 Text(
-                    "Last Action: ${if (lastThrow.hit) "Hit" else "Miss"} on ${lastThrow.target}",
+                    // Display slightly shorter text in landscape if needed
+                    text = "Last: ${if (lastThrow.hit) "Hit" else "Miss"} on ${lastThrow.target}",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Yellow
+                    color = Color.Yellow,
+                    modifier = Modifier.align(Alignment.Center),
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -255,96 +414,138 @@ private fun ActionButtons(
     dartsThisTurn: Int,
     onDartsThisTurnChange: (Int) -> Unit,
     starThresholds: List<Int>,
-    onCanUndoChange: (Boolean) -> Unit
+    onCanUndoChange: (Boolean) -> Unit,
+    isLandscape: Boolean
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp)
-    ) {
-        Button(
-            onClick = {
-                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
-                    gameState.value = updateAroundTheClockGameState(
-                        gameState.value,
-                        true
-                    )
-                    onDartsThisTurnChange(dartsThisTurn + 1)
-                    onCanUndoChange(true) // Enable undo after an action
-                }
-                if (dartsThisTurn == 2) {
-                    onDartsThisTurnChange(0)
-                }
-            },
-            enabled = !gameState.value.gameFinished,
-            modifier = Modifier
-                .weight(1f)
-                .height(72.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+    // Use Column in Landscape, Row in Portrait
+    val arrangement =
+        if (isLandscape) Arrangement.spacedBy(16.dp) else Arrangement.spacedBy(16.dp) // Can adjust spacing differently
+    val modifier = Modifier
+        .fillMaxWidth(if (isLandscape) 0.9f else 1f) // Take less width in landscape column
+        .padding(horizontal = if (isLandscape) 0.dp else 32.dp) // No horizontal padding needed if column manages width
+
+    if (isLandscape) {
+        // Buttons stacked vertically in landscape's right column
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = arrangement, // Vertical spacing
+            modifier = modifier
         ) {
-            Text("Hit", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            HitMissButton(
+                gameState,
+                true,
+                dartsThisTurn,
+                onDartsThisTurnChange,
+                onCanUndoChange,
+                Modifier.fillMaxWidth()
+            )
+            HitMissButton(
+                gameState,
+                false,
+                dartsThisTurn,
+                onDartsThisTurnChange,
+                onCanUndoChange,
+                Modifier.fillMaxWidth()
+            )
         }
-        Button(
-            onClick = {
-                if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
-                    gameState.value = updateAroundTheClockGameState(
-                        gameState.value,
-                        false
-                    )
-                    onDartsThisTurnChange(dartsThisTurn + 1)
-                    onCanUndoChange(true) // Enable undo after an action
-                }
-                if (dartsThisTurn == 2) {
-                    onDartsThisTurnChange(0)
-                }
-            },
-            enabled = !gameState.value.gameFinished,
-            modifier = Modifier
-                .weight(1f)
-                .height(72.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+    } else {
+        // Buttons side-by-side in portrait
+        Row(
+            horizontalArrangement = arrangement, // Horizontal spacing
+            modifier = modifier
         ) {
-            Text("Miss", style = MaterialTheme.typography.titleMedium, color = Color.White)
+            HitMissButton(
+                gameState,
+                true,
+                dartsThisTurn,
+                onDartsThisTurnChange,
+                onCanUndoChange,
+                Modifier.weight(1f)
+            )
+            HitMissButton(
+                gameState,
+                false,
+                dartsThisTurn,
+                onDartsThisTurnChange,
+                onCanUndoChange,
+                Modifier.weight(1f)
+            )
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
+    // Removed Spacer here, handled in parent layouts
+}
+
+// Extracted common button logic
+@Composable
+private fun HitMissButton(
+    gameState: MutableState<AroundTheClockGameState>,
+    isHitButton: Boolean,
+    dartsThisTurn: Int,
+    onDartsThisTurnChange: (Int) -> Unit,
+    onCanUndoChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier // Pass modifier
+) {
+    val text = if (isHitButton) "Hit" else "Miss"
+    val color = if (isHitButton) Color(0xFF4CAF50) else Color(0xFFF44336)
+    Button(
+        onClick = {
+            if (dartsThisTurn < 3 && !gameState.value.gameFinished) {
+                gameState.value = updateAroundTheClockGameState(
+                    gameState.value,
+                    isHitButton // Pass true for Hit, false for Miss
+                )
+                val nextDartsThisTurn = (dartsThisTurn + 1) % 3 // Cycle 0, 1, 2, 0...
+                onDartsThisTurnChange(nextDartsThisTurn)
+                onCanUndoChange(true) // Enable undo after any action
+            }
+            // Removed the separate dartsThisTurn reset logic, handled by modulo now
+        },
+        enabled = !gameState.value.gameFinished,
+        modifier = modifier.height(72.dp), // Keep consistent height
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = color)
+    ) {
+        Text(text, style = MaterialTheme.typography.titleMedium, color = Color.White)
+    }
+}
+
+
+@Composable
+private fun UndoButtonComposable(
+    onUndo: () -> Unit,
+    canUndo: Boolean,
+    modifier: Modifier = Modifier // Allow passing modifier if needed for specific cases
+) {
+    Button(
+        onClick = onUndo,
+        enabled = canUndo,
+        modifier = modifier // Apply modifier passed, if any
+            .fillMaxWidth(0.9f) // Match width from previous GameControlButtons landscape style
+            .height(72.dp), // Standard height
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Specific Undo color
+    ) {
+        Text("Undo", style = MaterialTheme.typography.titleMedium, color = Color.White)
+    }
 }
 
 @Composable
-private fun BottomNavigation(onUndo: () -> Unit, canUndo: Boolean, onBack: () -> Unit) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp)
-            .padding(bottom = 24.dp) // Add bottom padding here
+private fun BackButtonComposable(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier // Modifier now primarily used for alignment
+) {
+    Button(
+        onClick = onBack,
+        modifier = modifier // Apply modifier (includes alignment from caller)
+            .fillMaxWidth(0.9f) // Match width from previous GameControlButtons landscape style
+            .height(60.dp), // Standard height
+        shape = RoundedCornerShape(12.dp)
+        // Default button colors
     ) {
-        Button(
-            onClick = onUndo,
-            enabled = canUndo,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6))
-        ) {
-            Text("Undo", style = MaterialTheme.typography.titleMedium, color = Color.White)
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = onBack,
-            modifier = Modifier
-                .fillMaxWidth(0.5f)
-                .height(60.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text("Back", style = MaterialTheme.typography.titleMedium)
-        }
+        Text("Back", style = MaterialTheme.typography.titleMedium)
     }
 }
+
 
 @Composable
 private fun GameOverDialog(
@@ -380,7 +581,7 @@ private fun GameOverDialog(
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        "Stars Earned: $finalStars",
+                        "Stars Earned: $finalStars / 5",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -425,7 +626,7 @@ private fun ExitConfirmationDialog(
             },
             text = {
                 Text(
-                    "Are you sure you want to exit? Your progress will be saved.",
+                    "Are you sure you want to exit?",
                     style = MaterialTheme.typography.bodyLarge
                 )
             },
@@ -474,8 +675,6 @@ fun AroundTheClockScreenPreview() {
             )
         }
     }
-
-    MockStorageHelper.initialize()
     val mockStorageHelper: StorageInterface = MockStorageHelper
 
     DartAdventureTheme {

@@ -1,7 +1,6 @@
 // GamesListScreen.kt (New composable for reusability)
 package com.example.dartadventure.screens
 
-import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -38,11 +36,6 @@ fun GamesListScreen(
     backgroundImageId: Int,
     gameNavigation: (Int, Int, NavController) -> Unit // Lambda for game navigation
 ) {
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTablet =
-        configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK >= Configuration.SCREENLAYOUT_SIZE_LARGE
-
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = backgroundImageId),
@@ -83,7 +76,7 @@ fun GamesListScreen(
                             Text(game.name, style = MaterialTheme.typography.labelLarge)
                         }
                         Text(
-                            "Highscore: $gameHighscore, Stars: $gameStars",
+                            "Highscore: $gameHighscore, Stars: $gameStars / 5",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.White
                         )

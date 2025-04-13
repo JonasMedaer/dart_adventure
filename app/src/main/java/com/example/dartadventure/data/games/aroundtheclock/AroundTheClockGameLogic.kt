@@ -49,13 +49,42 @@ fun undoAroundTheClockGameState(gameState: AroundTheClockGameState): AroundTheCl
     val previousThrows = gameState.throws.dropLast(1).toMutableList() // Convert to MutableList
     val newTotalDartsUsed = gameState.totalDartsUsed - 1
     val newCurrentScore = calculateAroundTheClockScore(newTotalDartsUsed)
-    val newCurrentTarget =
-        if (lastThrow.hit) gameState.currentTarget - 1 else gameState.currentTarget
+    val newCurrentTarget = if (lastThrow.hit && gameState.currentTarget > 1) {
+        gameState.currentTarget - 1
+    } else {
+        gameState.currentTarget
+    }
     val newGameFinished = false // After undo, the game is no longer finished (if it was)
     val newDartsThrown = gameState.dartsThrown - 1
 
     return gameState.copy(
         currentTarget = newCurrentTarget.coerceAtLeast(1), // Ensure target doesn't go below 1
+        totalDartsUsed = newTotalDartsUsed.coerceAtLeast(0),
+        currentScore = newCurrentScore,
+        throws = previousThrows,
+        gameFinished = newGameFinished,
+        dartsThrown = newDartsThrown.coerceAtLeast(0)
+    )
+}
+
+fun undoLastThrowAfterGameOver(gameState: AroundTheClockGameState): AroundTheClockGameState {
+    if (gameState.throws.isEmpty()) {
+        return gameState // Nothing to undo
+    }
+
+    // We don't need the lastThrow details to decide on the target here
+    val previousThrows = gameState.throws.dropLast(1).toMutableList()
+    val newTotalDartsUsed = gameState.totalDartsUsed - 1
+    val newCurrentScore = calculateAroundTheClockScore(newTotalDartsUsed)
+
+    // *** The Key Change: Keep the current target ***
+    val newCurrentTarget = gameState.currentTarget // Don't decrement!
+
+    val newGameFinished = false // After undo, the game is no longer finished
+    val newDartsThrown = gameState.dartsThrown - 1
+
+    return gameState.copy(
+        currentTarget = newCurrentTarget, // Keep the target the same
         totalDartsUsed = newTotalDartsUsed.coerceAtLeast(0),
         currentScore = newCurrentScore,
         throws = previousThrows,

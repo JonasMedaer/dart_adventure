@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -35,11 +34,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -228,7 +225,7 @@ private fun GameContent(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Stars: $currentStars",
+                    "Stars: $currentStars / 5",
                     style = MaterialTheme.typography.titleLarge,
                     color = Color.Yellow,
                     fontWeight = FontWeight.Bold
@@ -365,7 +362,7 @@ private fun GameContent(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "Stars: $currentStars",
+                "Stars: $currentStars / 5",
                 style = MaterialTheme.typography.titleLarge,
                 color = Color.Yellow,
                 fontWeight = FontWeight.Bold
@@ -471,31 +468,6 @@ private fun GameContent(
     }
 }
 
-@Composable
-private fun NumpadButton(
-    text: String,
-    onClick
-    : (String) -> Unit,
-    size: Dp = 60.dp,
-    textStyle: TextStyle = MaterialTheme.typography.headlineSmall
-) {
-    Button(
-        onClick = { onClick(text) },
-        modifier = Modifier
-            .width(size)
-            .height(size),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text, style = textStyle)
-        }
-    }
-}
-
 
 @Composable
 private fun GameOverDialog(
@@ -526,16 +498,14 @@ private fun GameOverDialog(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        "Stars Earned: $currentStars",
+                        "Stars Earned: $currentStars / 5",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.Yellow,
                         fontWeight = FontWeight.SemiBold
                     )
                     if (lastThrow != null && gameState.throws.isNotEmpty()) {
                         Text(
                             "Last Throw: ${lastThrow.score}",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Yellow
                         )
                     }
                 }
@@ -551,7 +521,10 @@ private fun GameOverDialog(
             dismissButton = {
                 if (canUndo && gameState.throws.isNotEmpty()) {
                     Button(
-                        onClick = onUndo,
+                        onClick = {
+                            onUndo() // Call the undo logic
+                            onDismiss() // Explicitly dismiss the dialog
+                        },
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text("Undo Last", style = MaterialTheme.typography.labelLarge)
