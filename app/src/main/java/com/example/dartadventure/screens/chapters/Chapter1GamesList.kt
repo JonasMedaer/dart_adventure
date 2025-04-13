@@ -20,8 +20,8 @@ fun Chapter1GamesList(
     chapter: Chapter,
     getLevelResult: (Int, Int) -> LevelResult?
 ) {
-    val backgroundImage = R.drawable.levelselect_path
-    val backgroundImageTablet = R.drawable.levelselect_path_tablet
+    val backgroundImage = R.drawable.gate
+    val backgroundImageTablet = R.drawable.gate_tablet
 
     val gameNavigation: (Int, Int, NavController) -> Unit = { chapterId, gameId, navController ->
         when (gameId) {

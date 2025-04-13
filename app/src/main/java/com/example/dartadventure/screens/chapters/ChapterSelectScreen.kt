@@ -130,17 +130,19 @@ fun ChapterSelectScreen(
                                     val totalStars = calculateTotalStars(chapter)
                                     val maxPossibleStars =
                                         calculateMaxPossibleStarsForChapter(chapter)
-                                    val displayText = if (isUnlocked) {
-                                        ""
-                                    } else {
-                                        val requiredStars = unlockThresholds[chapter.id] ?: 0
-                                        "Total Stars: $totalStars / $maxPossibleStars (Requires $requiredStars overall)"
-                                    }
                                     Text(
-                                        displayText,
+                                        "Stars: $totalStars / $maxPossibleStars",
                                         style = MaterialTheme.typography.bodyLarge,
-                                        color = Color.White.copy(alpha = if (isUnlocked) 0f else 1f)
+                                        color = Color.White
                                     )
+                                    if (!isUnlocked) {
+                                        val requiredStars = unlockThresholds[chapter.id] ?: 0
+                                        Text(
+                                            "(Requires $requiredStars overall)",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.White.copy(alpha = 0.7f)
+                                        )
+                                    }
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(
