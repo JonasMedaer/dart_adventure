@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -37,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.dartadventure.R
@@ -99,175 +102,278 @@ fun HighscoreScreen(
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.SpaceBetween, // Use SpaceBetween for better distribution
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Box(
+            Spacer(modifier = Modifier.height(32.dp)) // Top spacing
+
+            GameContent(
+                gameState = gameState.value,
+                currentStars = currentStars,
+                lastThrow = lastThrow,
+                throwScoreInput = throwScoreInput,
+                onThrowScoreInputChange = {
+                    val filteredInput = it.filter { char -> char.isDigit() }
+                    throwScoreInput = filteredInput
+                    isInputValid =
+                        filteredInput.toIntOrNull() != null && filteredInput.toInt() >= 0 && filteredInput.toInt() <= 180
+                },
+                isInputValid = isInputValid,
+                onThrow = {
+                    val throwScore = throwScoreInput.toIntOrNull()
+                    if (throwScore != null && throwScore >= 0) {
+                        gameState.value =
+                            updateHighscoreGameState(gameState.value, throwScore)
+                        throwScoreInput = ""
+                    }
+                },
+                onUndo = { gameState.value = undoHighscoreGameState(gameState.value) },
+                canUndo = canUndo
+            )
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .fillMaxHeight(0.8f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.4f))
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .padding(bottom = 32.dp) // Bottom spacing
             ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Button(
+                    onClick = { showExitDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text(
-                        "Highscore",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White
-                    )
-
-                    Text(
-                        "Score: ${gameState.value.currentScore}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                    Text(
-                        "Stars: $currentStars",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                    Text(
-                        "Throws Remaining: ${gameState.value.throwsRemaining}",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White
-                    )
-                    if (lastThrow != null) {
-                        Text(
-                            "Last Throw: ${lastThrow?.score}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Yellow
-                        )
-                    }
-
-                    OutlinedTextField(
-                        value = throwScoreInput,
-                        onValueChange = {
-                            val filteredInput = it.filter { char -> char.isDigit() }
-                            throwScoreInput = filteredInput
-                            isInputValid =
-                                filteredInput.toIntOrNull() != null && filteredInput.toInt() >= 0 && filteredInput.toInt() <= 180
-                        },
-                        label = {
-                            Text(
-                                "Score (3 Darts)",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = Color.White
-                            )
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        visualTransformation = NumberInputTransformation(),
-                        isError = !isInputValid,
-                        modifier = Modifier.width(280.dp)
-                    )
-                    if (!isInputValid && throwScoreInput.isNotEmpty()) {
-                        Text(
-                            "Invalid score.",
-                            color = androidx.compose.ui.graphics.Color.Red
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth() // Make the Row take full width
-                    ) {
-                        Button(
-                            onClick = {
-                                val throwScore = throwScoreInput.toIntOrNull()
-                                if (throwScore != null && throwScore >= 0) {
-                                    gameState.value =
-                                        updateHighscoreGameState(gameState.value, throwScore)
-                                    throwScoreInput = ""
-                                }
-                            },
-                            enabled = gameState.value.throwsRemaining > 0 && isInputValid,
-                            modifier = Modifier
-                                .weight(2f) // 2 parts of the weight
-                                .height(60.dp),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            Text("Throw", style = MaterialTheme.typography.labelLarge)
-                        }
-                        Spacer(modifier = Modifier.width(2.dp)) // Add some space between buttons
-                        Button(
-                            onClick = {
-                                gameState.value = undoHighscoreGameState(gameState.value)
-                            },
-                            enabled = canUndo && gameState.value.throwsRemaining < 5,
-                            modifier = Modifier
-                                .weight(1f) // 1 part of the weight
-                                .height(60.dp),
-                            contentPadding = PaddingValues(16.dp)
-                        ) {
-                            Text("Undo", style = MaterialTheme.typography.labelLarge)
-                        }
-                    }
+                    Text("Back", style = MaterialTheme.typography.labelLarge)
                 }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = { showExitDialog = true }) {
-                Text("Back", style = MaterialTheme.typography.labelLarge)
             }
         }
     }
 
-    if (showGameOverDialog) {
-        AlertDialog(
-            onDismissRequest = { /* Prevent dismissing by tapping outside */ },
-            title = { Text("Game end!", style = MaterialTheme.typography.headlineSmall) },
-            text = {
-                Column {
+    GameOverDialog(
+        showDialog = showGameOverDialog,
+        gameState = gameState.value,
+        currentStars = currentStars,
+        lastThrow = lastThrow,
+        canUndo = canUndo,
+        onUndo = { gameState.value = undoHighscoreGameState(gameState.value) },
+        onDismiss = { showGameOverDialog = false },
+        onFinish = {
+            showGameOverDialog = false
+            val levelResult = getLevelResult(gameState.value)
+            StorageHelper.saveLevelResult(levelResult)
+            navController.popBackStack()
+        }
+    )
+
+    ExitConfirmationDialog(
+        showDialog = showExitDialog,
+        onDismiss = { showExitDialog = false },
+        onConfirmExit = { navController.popBackStack() }
+    )
+}
+
+@Composable
+private fun GameContent(
+    gameState: HighscoreGameState,
+    currentStars: Int,
+    lastThrow: HighscoreDartThrow?,
+    throwScoreInput: String,
+    onThrowScoreInputChange: (String) -> Unit,
+    isInputValid: Boolean,
+    onThrow: () -> Unit,
+    onUndo: () -> Unit,
+    canUndo: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.85f)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.Black.copy(alpha = 0.6f)) // Slightly less transparent
+            .padding(vertical = 48.dp, horizontal = 32.dp), // More vertical padding
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp), // Space between elements
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "Highscore",
+                style = MaterialTheme.typography.headlineMedium, // Larger title
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                "Score: ${gameState.currentScore}",
+                style = MaterialTheme.typography.titleLarge, // Larger score
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Stars: $currentStars",
+                style = MaterialTheme.typography.titleLarge, // Larger stars
+                color = Color.Yellow, // More emphasis on stars
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                "Throws Remaining: ${gameState.throwsRemaining}",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
+
+            if (lastThrow != null) {
+                Text(
+                    "Last Throw: ${lastThrow.score}",
+                    style = MaterialTheme.typography.bodyLarge, // More readable
+                    color = Color.Yellow,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = throwScoreInput,
+                onValueChange = onThrowScoreInputChange,
+                label = {
                     Text(
-                        "Current Score: ${gameState.value.currentScore}",
-                        style = MaterialTheme.typography.bodyMedium
+                        "Enter Score (0-180)",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color.White
+                    )
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                visualTransformation = NumberInputTransformation(),
+                isError = !isInputValid,
+                modifier = Modifier.fillMaxWidth()
+            )
+            if (!isInputValid && throwScoreInput.isNotEmpty()) {
+                Text(
+                    "Invalid score (0-180).",
+                    color = androidx.compose.ui.graphics.Color.Red,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Button(
+                    onClick = onThrow,
+                    enabled = gameState.throwsRemaining > 0 && isInputValid,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text("Throw", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                }
+                Button(
+                    onClick = onUndo,
+                    enabled = canUndo && gameState.throwsRemaining < 5,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF64B5F6)) // Blue for Undo
+                ) {
+                    Text("Undo", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameOverDialog(
+    showDialog: Boolean,
+    gameState: HighscoreGameState,
+    currentStars: Int,
+    lastThrow: HighscoreDartThrow?,
+    canUndo: Boolean,
+    onUndo: () -> Unit,
+    onDismiss: () -> Unit,
+    onFinish: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    "Game Over!",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Final Score: ${gameState.currentScore}",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
                     )
                     Text(
                         "Stars Earned: $currentStars",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Yellow,
+                        fontWeight = FontWeight.SemiBold
                     )
-                    if (lastThrow != null && gameState.value.throws.isNotEmpty()) {
+                    if (lastThrow != null && gameState.throws.isNotEmpty()) {
                         Text(
-                            "Last Throw: ${lastThrow?.score}",
-                            style = MaterialTheme.typography.bodyMedium
+                            "Last Throw: ${lastThrow.score}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Yellow
                         )
                     }
                 }
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        gameState.value = undoHighscoreGameState(gameState.value)
-                        showGameOverDialog = false
-                    },
-                    enabled = canUndo && gameState.value.throws.isNotEmpty()
+                    onClick = onFinish,
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Undo", style = MaterialTheme.typography.labelLarge)
+                    Text("Finish", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
-                Button(
-                    onClick = {
-                        showGameOverDialog = false
-                        val levelResult = getLevelResult(gameState.value)
-                        StorageHelper.saveLevelResult(levelResult)
-                        navController.popBackStack()
+                if (canUndo && gameState.throws.isNotEmpty()) {
+                    Button(
+                        onClick = onUndo,
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("Undo Last", style = MaterialTheme.typography.labelLarge)
                     }
-                ) {
-                    Text("Finish", style = MaterialTheme.typography.labelLarge)
                 }
             }
         )
     }
+}
 
-    if (showExitDialog) {
+@Composable
+private fun ExitConfirmationDialog(
+    showDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirmExit: () -> Unit
+) {
+    if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showExitDialog = false },
-            title = { Text("Confirm Exit", style = MaterialTheme.typography.headlineSmall) },
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    "Confirm Exit",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             text = {
                 Text(
                     "Are you sure you want to exit? ",
@@ -276,16 +382,14 @@ fun HighscoreScreen(
             },
             confirmButton = {
                 Button(
-                    onClick = {
-                        showExitDialog = false
-                        navController.popBackStack()
-                    }
+                    onClick = onConfirmExit,
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("Exit", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
-                Button(onClick = { showExitDialog = false }) {
+                Button(onClick = onDismiss, shape = RoundedCornerShape(8.dp)) {
                     Text("Cancel", style = MaterialTheme.typography.labelLarge)
                 }
             }
