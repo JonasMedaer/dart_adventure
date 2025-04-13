@@ -30,7 +30,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -51,6 +50,7 @@ import com.example.dartadventure.data.games.getLevelResult
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
 import com.example.dartadventure.data.highscore.undoHighscoreGameState
 import com.example.dartadventure.data.highscore.updateHighscoreGameState
+import com.example.dartadventure.ui.components.NumpadComponent
 import com.example.dartadventure.ui.theme.DartAdventureTheme
 import com.example.dartadventure.utils.StorageHelper
 
@@ -95,56 +95,62 @@ fun HighscoreScreen(
             contentScale = ContentScale.Crop
         )
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f)) // Semi-transparent background
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            GameContent(
-                gameState = gameState.value,
-                currentStars = currentStars,
-                lastThrow = lastThrow,
-                enteredScore = enteredScore,
-                onNumpadClick = { digit ->
-                    if (enteredScore.length < 3) {
-                        enteredScore += digit
-                    }
-                },
-                onClearClick = { enteredScore = "" },
-                isInputValid = isInputValid,
-                onThrow = {
-                    val score = enteredScore.toIntOrNull()
-                    if (score != null && score in 0..180) {
-                        gameState.value = updateHighscoreGameState(gameState.value, score)
-                        enteredScore = ""
-                        isInputValid = true // Reset here as well for immediate feedback
-                    } else if (enteredScore.isNotEmpty()) {
-                        isInputValid = false // Set here as well
-                    }
-                },
-                onUndo = { gameState.value = undoHighscoreGameState(gameState.value) },
-                canUndo = canUndo,
-                isLandscape = isLandscape,
-                onIsInputValidChange = { newValue -> isInputValid = newValue }
-            )
-
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-                    .padding(bottom = 32.dp)
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Button(
-                    onClick = { showExitDialog = true },
+                Spacer(modifier = Modifier.height(32.dp))
+
+                GameContent(
+                    gameState = gameState.value,
+                    currentStars = currentStars,
+                    lastThrow = lastThrow,
+                    enteredScore = enteredScore,
+                    onNumpadClick = { digit ->
+                        if (enteredScore.length < 3) {
+                            enteredScore += digit
+                        }
+                    },
+                    onClearClick = { enteredScore = "" },
+                    isInputValid = isInputValid,
+                    onThrow = {
+                        val score = enteredScore.toIntOrNull()
+                        if (score != null && score in 0..180) {
+                            gameState.value = updateHighscoreGameState(gameState.value, score)
+                            enteredScore = ""
+                            isInputValid = true // Reset here as well for immediate feedback
+                        } else if (enteredScore.isNotEmpty()) {
+                            isInputValid = false // Set here as well
+                        }
+                    },
+                    onUndo = { gameState.value = undoHighscoreGameState(gameState.value) },
+                    canUndo = canUndo,
+                    isLandscape = isLandscape,
+                    onIsInputValidChange = { newValue -> isInputValid = newValue }
+                )
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .fillMaxWidth(0.5f)
-                        .height(60.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp)
+                        .padding(bottom = 32.dp)
                 ) {
-                    Text("Back", style = MaterialTheme.typography.labelLarge)
+                    Button(
+                        onClick = { showExitDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .height(60.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Back", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
         }
@@ -198,8 +204,6 @@ private fun GameContent(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.8f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black.copy(alpha = 0.6f))
                 .padding(24.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
@@ -207,7 +211,7 @@ private fun GameContent(
             // Left Column: Game Information
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp), // Increased vertical space
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
@@ -235,14 +239,15 @@ private fun GameContent(
                     color = Color.White
                 )
 
-                // Reserve space for "Last Throw"
-                Box(modifier = Modifier.height(lastThrowHeightDp)) {
+                // Ensure enough space for "Last Throw"
+                Box(modifier = Modifier.height(lastThrowHeightDp * 2)) { // Increased height
                     if (lastThrow != null) {
                         Text(
                             "Last Throw: ${lastThrow.score}",
                             style = MaterialTheme.typography.bodyLarge,
                             color = Color.Yellow,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.align(Alignment.Center) // Center vertically in the box
                         )
                     }
                 }
@@ -282,7 +287,7 @@ private fun GameContent(
                     )
                 }
 
-                Numpad(
+                NumpadComponent(
                     onNumpadClick = onNumpadClick,
                     onClearClick = onClearClick,
                     buttonSize = 60.dp, // Adjust as needed
@@ -344,8 +349,6 @@ private fun GameContent(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .fillMaxHeight(0.85f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color.Black.copy(alpha = 0.6f))
                 .padding(vertical = 24.dp, horizontal = 32.dp)
         ) {
             Text(
@@ -373,14 +376,15 @@ private fun GameContent(
                 color = Color.White
             )
 
-            // Reserve space for "Last Throw"
-            Box(modifier = Modifier.height(lastThrowHeightDp)) {
+            // Ensure enough space for "Last Throw"
+            Box(modifier = Modifier.height(lastThrowHeightDp * 2)) { // Increased height
                 if (lastThrow != null) {
                     Text(
                         "Last Throw: ${lastThrow.score}",
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.Yellow,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.align(Alignment.Center) // Center vertically
                     )
                 }
             }
@@ -411,7 +415,7 @@ private fun GameContent(
                 )
             }
 
-            Numpad(
+            NumpadComponent(
                 onNumpadClick = onNumpadClick,
                 onClearClick = onClearClick,
                 buttonSize = 50.dp,
@@ -468,206 +472,10 @@ private fun GameContent(
 }
 
 @Composable
-private fun Numpad(
-    onNumpadClick: (String) -> Unit,
-    onClearClick: () -> Unit,
-    buttonSize: Dp = 50.dp,
-    spacing: Dp = 6.dp,
-    isLandscape: Boolean
-) {
-    val landscapeButtonSize = 90.dp // Increased button size for landscape/tablet
-    val landscapeSpacing = 10.dp
-    val clearButtonColor = Color(0xFF444444)
-
-    if (isLandscape) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(landscapeSpacing),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(landscapeSpacing)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(landscapeSpacing)) {
-                    NumpadButton(
-                        text = "1",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "2",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "3",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(landscapeSpacing)) {
-                    NumpadButton(
-                        text = "4",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "5",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "6",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(landscapeSpacing)) {
-                    NumpadButton(
-                        text = "7",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "8",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                    NumpadButton(
-                        text = "9",
-                        onClick = onNumpadClick,
-                        size = landscapeButtonSize,
-                        textStyle = MaterialTheme.typography.headlineSmall
-                    )
-                }
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(landscapeSpacing)) {
-                Button(
-                    onClick = onClearClick,
-                    modifier = Modifier
-                        .width(landscapeButtonSize)
-                        .height(landscapeButtonSize), // Adjusted height to match number buttons
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = clearButtonColor)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) { // Center the "X"
-                        Text("X", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                    }
-                }
-                NumpadButton(
-                    text = "0",
-                    onClick = onNumpadClick,
-                    size = landscapeButtonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-            }
-        }
-    } else {
-        val clearButtonColorPortrait = Color(0xFF444444)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing)
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                NumpadButton(
-                    text = "1",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "2",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "3",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                NumpadButton(
-                    text = "4",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "5",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "6",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                NumpadButton(
-                    text = "7",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "8",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                NumpadButton(
-                    text = "9",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
-                Button(
-                    onClick = onClearClick,
-                    modifier = Modifier
-                        .width(buttonSize)
-                        .height(buttonSize),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = clearButtonColorPortrait)
-                ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) { // Center the "X"
-                        Text("X", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                    }
-                }
-                NumpadButton(
-                    text = "0",
-                    onClick = onNumpadClick,
-                    size = buttonSize,
-                    textStyle = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(modifier = Modifier.width(buttonSize))
-            }
-        }
-    }
-}
-
-@Composable
 private fun NumpadButton(
     text: String,
-    onClick: (String) -> Unit,
+    onClick
+    : (String) -> Unit,
     size: Dp = 60.dp,
     textStyle: TextStyle = MaterialTheme.typography.headlineSmall
 ) {

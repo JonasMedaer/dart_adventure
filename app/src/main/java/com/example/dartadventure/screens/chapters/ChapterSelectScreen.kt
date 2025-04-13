@@ -1,5 +1,5 @@
 // ChapterSelectScreen.kt
-package com.example.dartadventure.screens
+package com.example.dartadventure.screens.chapters
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image

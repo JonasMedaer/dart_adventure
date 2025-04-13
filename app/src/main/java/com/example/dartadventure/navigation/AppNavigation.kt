@@ -15,9 +15,10 @@ import com.example.dartadventure.data.LevelResult
 import com.example.dartadventure.data.games.aroundtheclock.AroundTheClockGameState
 import com.example.dartadventure.data.games.highscore.HighscoreGameState
 import com.example.dartadventure.screens.Chapter1GamesList
-import com.example.dartadventure.screens.ChapterSelectScreen
+import com.example.dartadventure.screens.Chapter2GamesList
 import com.example.dartadventure.screens.DartboardBackgroundWithContent
 import com.example.dartadventure.screens.SettingsScreen
+import com.example.dartadventure.screens.chapters.ChapterSelectScreen
 import com.example.dartadventure.screens.games.AroundTheClockScreen
 import com.example.dartadventure.screens.games.HighscoreScreen
 import com.example.dartadventure.utils.StorageInterface
@@ -51,6 +52,11 @@ fun AppNavigation(
                 }
             when (chapterId) {
                 1 -> Chapter1GamesList(navController, chapter, getLevelResult)
+                2 -> Chapter2GamesList(
+                    navController,
+                    chapter,
+                    getLevelResult
+                ) // Add navigation for Chapter 2
                 else -> {
                     Text("Invalid Chapter Selected")
                 }
@@ -98,6 +104,20 @@ fun AppNavigation(
                 getGameData = { gameId -> chapters.find { it.games.any { it.id == gameId } }?.games?.find { it.id == gameId } },
                 storageHelper = storageHelper // Pass the storageHelper here as well
             )
+        }
+        composable("target_practice/{chapterId}") { backStackEntry ->
+            val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull()
+                ?: 2 // Assuming Chapter 2
+            // You'll need to set up the game state and screen for TargetPracticeScreen
+            Text("Target Practice Screen for Chapter $chapterId") // Placeholder
+            // TODO: Implement TargetPracticeScreen and its state management
+        }
+        composable("elimination/{chapterId}") { backStackEntry ->
+            val chapterId = backStackEntry.arguments?.getString("chapterId")?.toIntOrNull()
+                ?: 2 // Assuming Chapter 2
+            // You'll need to set up the game state and screen for EliminationScreen
+            Text("Elimination Screen for Chapter $chapterId") // Placeholder
+            // TODO: Implement EliminationScreen and its state management
         }
     }
 }

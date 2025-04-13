@@ -112,31 +112,37 @@ fun AroundTheClockScreen(
             contentScale = ContentScale.Crop
         )
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.6f)) // Semi-transparent background
         ) {
-            TopSection(
-                gameState = gameState.value,
-                currentStars = currentStars,
-                lastThrow = lastThrow
-            )
-            ActionButtons(
-                gameState = gameState,
-                dartsThisTurn = dartsThisTurn,
-                onDartsThisTurnChange = { dartsThisTurn = it },
-                starThresholds = starThresholds,
-                onCanUndoChange = { canUndo = it }
-            )
-            BottomNavigation(
-                onUndo = {
-                    gameState.value = undoAroundTheClockGameState(gameState.value)
-                    dartsThisTurn = gameState.value.dartsThrown % 3
-                },
-                canUndo = canUndo,
-                onBack = { showExitDialog = true }
-            )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                TopSection(
+                    gameState = gameState.value,
+                    currentStars = currentStars,
+                    lastThrow = lastThrow
+                )
+                ActionButtons(
+                    gameState = gameState,
+                    dartsThisTurn = dartsThisTurn,
+                    onDartsThisTurnChange = { dartsThisTurn = it },
+                    starThresholds = starThresholds,
+                    onCanUndoChange = { canUndo = it }
+                )
+                BottomNavigation(
+                    onUndo = {
+                        gameState.value = undoAroundTheClockGameState(gameState.value)
+                        dartsThisTurn = gameState.value.dartsThrown % 3
+                    },
+                    canUndo = canUndo,
+                    onBack = { showExitDialog = true }
+                )
+            }
         }
     }
 
